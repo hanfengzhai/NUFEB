@@ -1,0 +1,2984 @@
+LAMMPS (20 Nov 2019)
+# NUFEB simulation
+
+atom_style	bio
+atom_modify	map array sort 1000 5.0e-7
+boundary	pp pp ff
+newton		off
+processors  * 1 1
+
+comm_modify	vel yes
+read_data_bio atom.in
+  orthogonal box = (0 0 0) to (0.0002 4e-05 0.0001)
+  10 by 1 by 1 MPI processor grid
+  reading atoms ...
+  5 atoms
+  2 nutrients
+
+group HET type 1
+4 atoms in group HET
+group EPS type 2
+1 atoms in group EPS
+
+neighbor	5e-7 bin
+neigh_modify	delay 0 one 5000
+
+##############Define DEM Variables&Commands##############
+
+pair_style  gran/hooke/history 1.e-4 NULL 1.e-5 NULL 0.0 1
+pair_coeff  * *
+
+timestep 10
+
+fix 1 all nve/limit 1e-8
+fix 10 all viscous 1.e-5
+
+fix yw all wall/gran hooke/history 2000 NULL 500.0 NULL 1.5 0 zplane  0.000000e-04 1.000000e-04
+
+variable kanc equal 50
+
+fix zwa all walladh v_kanc zplane  0.000000e-04 1.000000e-04
+
+variable ke equal 5e+10
+fix j1 all epsadh 1 v_ke 1
+
+##############Ibm Variable Definitions##############
+
+#variables used in fix eps_extract
+variable EPSdens equal 30
+variable EPSratio equal 1.25
+
+#variables used in fix division
+variable divDia equal 1.36e-6
+
+#variables used in fix kinetics
+variable diffT equal 5e-4
+variable tol equal 1e-6
+variable layer equal -1
+
+#variables used in fix shear
+variable viscosity equal 0.001
+variable shearRate equal 0.2
+variable height equal 0.0
+
+##############Ibm compute##############
+
+compute myNtypes all ntypes
+compute myBiomass all biomass
+
+##############Simulation outputs##############
+
+#dump		id all custom 2000 snapshot.bubblemd id type diameter x y z
+# dump  du1 all vtk 2000 atom_*.vtu id type diameter x y z
+# dump		du2 all grid 2000 grid_%_*.vti con
+thermo_style    custom step cpu atoms c_myNtypes[*]
+thermo		100
+thermo_modify	lost ignore
+
+##############Define IBm Commands##############
+
+fix k1 all kinetics 100 60 12 30 v_diffT v_layer niter 5000
+fix kgm all kinetics/growth/monod epsdens 30
+fix g1 all kinetics/diffusion v_tol
+fix d1 all divide 100 v_EPSdens v_divDia 31233
+fix e1 HET eps_extract 100 v_EPSratio v_EPSdens 12422423
+
+run 40000
+Neighbor list info ...
+  update every 1 steps, delay 0 steps, check yes
+  max neighbors/atom: 5000, page size: 100000
+  master list distance cutoff = 1.5e-06
+  ghost atom cutoff = 1.5e-06
+  binsize = 7.5e-07, bins = 267 54 134
+  2 neighbor lists, perpetual/occasional/extra = 2 0 0
+  (1) pair gran/hooke/history, perpetual
+      attributes: half, newton off, size, history
+      pair build: half/size/bin/newtoff
+      stencil: half/bin/3d/newtoff
+      bin: standard
+  (2) fix epsadh, perpetual
+      attributes: half, newton off
+      pair build: half/bin/newtoff
+      stencil: half/bin/3d/newtoff
+      bin: standard
+Per MPI rank memory allocation (min/avg/max) = 12.12 | 12.15 | 12.28 Mbytes
+Step CPU Atoms c_myNtypes[1] c_myNtypes[2] 
+       0            0        5            4            1 
+number of iterations: 2727 
+     100   0.26085783        5            4            1 
+number of iterations: 1532 
+     200   0.40369914        5            4            1 
+number of iterations: 1703 
+     300   0.56265286        5            4            1 
+number of iterations: 1942 
+     400   0.74548052        5            4            1 
+number of iterations: 2220 
+     500   0.95780934        5            4            1 
+number of iterations: 2559 
+     600    1.1985237       17            8            9 
+number of iterations: 2907 
+     700    1.4733453       17            8            9 
+number of iterations: 3296 
+     800    1.7857977       19            8           11 
+number of iterations: 3716 
+     900    2.1419622       26            9           17 
+number of iterations: 4194 
+    1000    2.5450106       29           12           17 
+number of iterations: 4660 
+    1100     2.994149       39           16           23 
+number of iterations: 5000 
+    1200    3.4794587       49           16           33 
+number of iterations: 5000 
+    1300     3.967675       54           21           33 
+number of iterations: 5000 
+    1400    4.4622567       64           23           41 
+number of iterations: 5000 
+    1500    4.9660263       90           30           60 
+number of iterations: 5000 
+    1600    5.4696201       95           33           62 
+number of iterations: 5000 
+    1700    5.9790153      110           39           71 
+number of iterations: 5000 
+    1800     6.495009      134           46           88 
+number of iterations: 5000 
+    1900    7.0082819      160           54          106 
+number of iterations: 5000 
+    2000    7.5323179      169           59          110 
+number of iterations: 5000 
+    2100    8.0587538      203           73          130 
+number of iterations: 5000 
+    2200    8.5720842      234           78          156 
+number of iterations: 5000 
+    2300    9.1119814      273           90          183 
+number of iterations: 5000 
+    2400     9.616549      294          104          190 
+number of iterations: 5000 
+    2500    10.123568      316          114          202 
+number of iterations: 5000 
+    2600     10.63551      370          128          242 
+number of iterations: 5000 
+    2700    11.146358      416          145          271 
+number of iterations: 5000 
+    2800    11.662649      462          159          303 
+number of iterations: 5000 
+    2900    12.173096      497          171          326 
+number of iterations: 5000 
+    3000    12.686328      542          192          350 
+number of iterations: 5000 
+    3100    13.167927      600          211          389 
+number of iterations: 5000 
+    3200    13.667139      650          225          425 
+number of iterations: 5000 
+    3300    14.171806      697          239          458 
+number of iterations: 5000 
+    3400    14.666964      735          255          480 
+number of iterations: 4929 
+    3500    15.149559      782          272          510 
+number of iterations: 4774 
+    3600    15.623714      825          291          534 
+number of iterations: 5000 
+    3700    16.125402      885          312          573 
+number of iterations: 4948 
+    3800    16.616671      932          332          600 
+number of iterations: 5000 
+    3900    17.119603      980          352          628 
+number of iterations: 4184 
+    4000    17.544773     1046          374          672 
+number of iterations: 4409 
+    4100    17.994541     1119          404          715 
+number of iterations: 3937 
+    4200    18.395854     1187          424          763 
+number of iterations: 4347 
+    4300    18.842719     1233          440          793 
+number of iterations: 4106 
+    4400    19.264186     1284          452          832 
+number of iterations: 3834 
+    4500    19.660046     1338          474          864 
+number of iterations: 4172 
+    4600    20.093895     1417          508          909 
+number of iterations: 4311 
+    4700    20.544634     1470          523          947 
+number of iterations: 4014 
+    4800    20.965273     1539          550          989 
+number of iterations: 3673 
+    4900    21.357215     1626          580         1046 
+number of iterations: 4358 
+    5000    21.818641     1689          599         1090 
+number of iterations: 4304 
+    5100    22.273754     1756          627         1129 
+number of iterations: 3578 
+    5200    22.659221     1809          641         1168 
+number of iterations: 2544 
+    5300    22.944201     1877          670         1207 
+number of iterations: 2843 
+    5400    23.266787     1922          685         1237 
+number of iterations: 2734 
+    5500    23.575389     1972          704         1268 
+number of iterations: 3530 
+    5600     23.96668     2046          729         1317 
+number of iterations: 3469 
+    5700    24.350115     2115          764         1351 
+number of iterations: 2658 
+    5800    24.661331     2200          795         1405 
+number of iterations: 3004 
+    5900    25.010152     2269          819         1450 
+number of iterations: 3103 
+    6000    25.365904     2344          841         1503 
+number of iterations: 2892 
+    6100    25.700525     2430          875         1555 
+number of iterations: 3679 
+    6200      26.1186     2500          897         1603 
+number of iterations: 2550 
+    6300    26.430042     2572          923         1649 
+number of iterations: 2761 
+    6400    26.761122     2637          946         1691 
+number of iterations: 2377 
+    6500    27.057231     2729          990         1739 
+number of iterations: 3196 
+    6600    27.442677     2799         1019         1780 
+number of iterations: 2579 
+    6700    27.767841     2863         1043         1820 
+number of iterations: 2860 
+    6800    28.123806     2946         1076         1870 
+number of iterations: 2339 
+    6900    28.428543     3015         1104         1911 
+number of iterations: 2377 
+    7000    28.747443     3079         1127         1952 
+number of iterations: 2806 
+    7100    29.101012     3147         1165         1982 
+number of iterations: 2671 
+    7200    29.446646     3238         1189         2049 
+number of iterations: 2540 
+    7300    29.782867     3318         1213         2105 
+number of iterations: 2552 
+    7400    30.122156     3402         1245         2157 
+number of iterations: 2296 
+    7500    30.441734     3465         1263         2202 
+number of iterations: 2424 
+    7600    30.768925     3543         1299         2244 
+number of iterations: 2990 
+    7700    31.152856     3627         1332         2295 
+number of iterations: 2499 
+    7800    31.489248     3703         1363         2340 
+number of iterations: 3094 
+    7900    31.887702     3784         1391         2393 
+number of iterations: 2515 
+    8000    32.240287     3858         1419         2439 
+number of iterations: 2768 
+    8100    32.615804     3949         1458         2491 
+number of iterations: 2392 
+    8200    32.948291     4024         1482         2542 
+number of iterations: 2285 
+    8300    33.276031     4097         1520         2577 
+number of iterations: 2636 
+    8400     33.63849     4184         1547         2637 
+number of iterations: 2168 
+    8500    33.955075     4281         1582         2699 
+number of iterations: 2510 
+    8600    34.312082     4358         1609         2749 
+number of iterations: 2194 
+    8700    34.648535     4430         1645         2785 
+number of iterations: 2045 
+    8800    34.961427     4507         1674         2833 
+number of iterations: 2510 
+    8900     35.32149     4596         1707         2889 
+number of iterations: 1876 
+    9000    35.624183     4678         1742         2936 
+number of iterations: 2172 
+    9100    35.953398     4760         1768         2992 
+number of iterations: 2268 
+    9200    36.295415     4845         1792         3053 
+number of iterations: 2284 
+    9300    36.643298     4935         1824         3111 
+number of iterations: 2343 
+    9400    36.996827     5010         1851         3159 
+number of iterations: 1850 
+    9500    37.306378     5108         1885         3223 
+number of iterations: 1916 
+    9600    37.623641     5192         1911         3281 
+number of iterations: 1685 
+    9700    37.923084     5285         1952         3333 
+number of iterations: 2220 
+    9800    38.281602     5345         1977         3368 
+number of iterations: 2090 
+    9900    38.622301     5421         2006         3415 
+number of iterations: 2123 
+   10000    38.970064     5496         2049         3447 
+number of iterations: 1958 
+   10100    39.296615     5605         2084         3521 
+number of iterations: 1849 
+   10200    39.615454     5695         2113         3582 
+number of iterations: 1768 
+   10300     39.92918     5779         2154         3625 
+number of iterations: 1923 
+   10400    40.263886     5874         2191         3683 
+number of iterations: 1842 
+   10500    40.591824     5962         2225         3737 
+number of iterations: 2126 
+   10600    40.952016     6039         2257         3782 
+number of iterations: 2036 
+   10700    41.317287     6135         2289         3846 
+number of iterations: 1604 
+   10800    41.627867     6241         2329         3912 
+number of iterations: 2165 
+   10900    42.012795     6324         2363         3961 
+number of iterations: 2227 
+   11000    42.393157     6419         2399         4020 
+number of iterations: 1874 
+   11100    42.735692     6497         2422         4075 
+number of iterations: 1977 
+   11200    43.092016     6588         2452         4136 
+number of iterations: 2231 
+   11300    43.475637     6676         2484         4192 
+number of iterations: 2010 
+   11400    43.836374     6758         2506         4252 
+number of iterations: 2302 
+   11500    44.243583     6862         2540         4322 
+number of iterations: 2029 
+   11600    44.613702     6944         2575         4369 
+number of iterations: 1666 
+   11700    44.949339     7026         2611         4415 
+number of iterations: 1751 
+   11800    45.295017     7110         2646         4464 
+number of iterations: 1834 
+   11900    45.666909     7198         2688         4510 
+number of iterations: 1703 
+   12000    46.014269     7305         2721         4584 
+number of iterations: 1713 
+   12100    46.373806     7380         2754         4626 
+number of iterations: 1759 
+   12200    46.739764     7454         2790         4664 
+number of iterations: 1582 
+   12300    47.074247     7558         2831         4727 
+number of iterations: 2149 
+   12400     47.46877     7653         2877         4776 
+number of iterations: 2080 
+   12500    47.858821     7743         2905         4838 
+number of iterations: 1725 
+   12600    48.231634     7833         2941         4892 
+number of iterations: 1814 
+   12700    48.598519     7926         2972         4954 
+number of iterations: 1814 
+   12800    48.964924     8031         2999         5032 
+number of iterations: 1762 
+   12900    49.329977     8124         3048         5076 
+number of iterations: 1965 
+   13000     49.71781     8220         3075         5145 
+number of iterations: 1948 
+   13100    50.101528     8322         3113         5209 
+number of iterations: 2146 
+   13200    50.507942     8430         3158         5272 
+number of iterations: 1640 
+   13300    50.867372     8509         3192         5317 
+number of iterations: 1965 
+   13400    51.260657     8593         3217         5376 
+number of iterations: 1587 
+   13500    51.618661     8686         3245         5441 
+number of iterations: 1566 
+   13600    51.975712     8761         3276         5485 
+number of iterations: 1384 
+   13700    52.317849     8853         3313         5540 
+number of iterations: 1562 
+   13800    52.678296     8939         3350         5589 
+number of iterations: 1507 
+   13900    53.040579     9060         3396         5664 
+number of iterations: 1514 
+   14000    53.405965     9177         3445         5732 
+number of iterations: 1559 
+   14100    53.769761     9293         3480         5813 
+number of iterations: 1526 
+   14200    54.134143     9393         3520         5873 
+number of iterations: 1282 
+   14300    54.495951     9482         3553         5929 
+number of iterations: 1628 
+   14400    54.876434     9576         3589         5987 
+number of iterations: 1885 
+   14500    55.282586     9649         3619         6030 
+number of iterations: 1625 
+   14600    55.663455     9739         3661         6078 
+number of iterations: 1760 
+   14700    56.059763     9840         3693         6147 
+number of iterations: 1309 
+   14800    56.433537     9940         3739         6201 
+number of iterations: 1773 
+   14900    56.853592    10034         3783         6251 
+number of iterations: 1879 
+   15000    57.271689    10119         3815         6304 
+number of iterations: 1711 
+   15100    57.662756    10222         3859         6363 
+number of iterations: 1480 
+   15200    58.036089    10311         3886         6425 
+number of iterations: 1710 
+   15300    58.435563    10416         3929         6487 
+number of iterations: 1820 
+   15400    58.845739    10513         3958         6555 
+number of iterations: 1413 
+   15500     59.21742    10610         3997         6613 
+number of iterations: 1859 
+   15600    59.637549    10710         4046         6664 
+number of iterations: 1442 
+   15700    60.017811    10810         4085         6725 
+number of iterations: 1708 
+   15800    60.425825    10896         4123         6773 
+number of iterations: 1619 
+   15900    60.826464    10998         4160         6838 
+number of iterations: 2107 
+   16000     61.27739    11112         4205         6907 
+number of iterations: 1772 
+   16100    61.690655    11241         4255         6986 
+number of iterations: 1600 
+   16200    62.091115    11352         4299         7053 
+number of iterations: 1725 
+   16300    62.506503    11465         4341         7124 
+number of iterations: 1392 
+   16400    62.891127    11557         4378         7179 
+number of iterations: 1702 
+   16500    63.332677    11673         4417         7256 
+number of iterations: 1676 
+   16600     63.76918    11778         4459         7319 
+number of iterations: 1545 
+   16700    64.176706    11885         4498         7387 
+number of iterations: 1677 
+   16800    64.599617    11979         4527         7452 
+number of iterations: 1747 
+   16900    65.030328    12084         4562         7522 
+number of iterations: 1567 
+   17000     65.44882    12171         4606         7565 
+number of iterations: 1800 
+   17100     65.88321    12285         4643         7642 
+number of iterations: 1450 
+   17200    66.286136    12375         4680         7695 
+number of iterations: 1567 
+   17300     66.70211    12459         4705         7754 
+number of iterations: 1502 
+   17400    67.113104    12569         4748         7821 
+number of iterations: 1637 
+   17500    67.539629    12674         4784         7890 
+number of iterations: 1937 
+   17600    67.998905    12796         4830         7966 
+number of iterations: 1356 
+   17700    68.403604    12899         4876         8023 
+number of iterations: 1395 
+   17800    68.811215    13005         4919         8086 
+number of iterations: 1418 
+   17900    69.224738    13100         4957         8143 
+number of iterations: 1611 
+   18000    69.660104    13199         4993         8206 
+number of iterations: 1584 
+   18100    70.085623    13301         5034         8267 
+number of iterations: 1819 
+   18200    70.535551    13395         5074         8321 
+number of iterations: 1798 
+   18300    70.983768    13496         5109         8387 
+number of iterations: 1809 
+   18400    71.433115    13592         5148         8444 
+number of iterations: 1653 
+   18500    71.870563    13696         5186         8510 
+number of iterations: 1397 
+   18600    72.285305    13791         5216         8575 
+number of iterations: 1688 
+   18700    72.731015    13901         5259         8642 
+number of iterations: 1324 
+   18800     73.14626    13992         5296         8696 
+number of iterations: 1672 
+   18900    73.607151    14088         5335         8753 
+number of iterations: 974 
+   19000    74.017227    14195         5377         8818 
+number of iterations: 1435 
+   19100    74.440391    14301         5421         8880 
+number of iterations: 1609 
+   19200    74.905609    14425         5473         8952 
+number of iterations: 1247 
+   19300    75.316938    14537         5516         9021 
+number of iterations: 1639 
+   19400    75.768416    14646         5567         9079 
+number of iterations: 1540 
+   19500    76.211384    14741         5605         9136 
+number of iterations: 1439 
+   19600    76.642933    14852         5644         9208 
+number of iterations: 1171 
+   19700    77.050669    14931         5672         9259 
+number of iterations: 1276 
+   19800    77.473075    15048         5708         9340 
+number of iterations: 1597 
+   19900     77.95333    15161         5753         9408 
+number of iterations: 1439 
+   20000    78.396973    15260         5786         9474 
+number of iterations: 1430 
+   20100    78.834125    15385         5829         9556 
+number of iterations: 1439 
+   20200    79.273213    15483         5861         9622 
+number of iterations: 1617 
+   20300    79.728952    15566         5901         9665 
+number of iterations: 1450 
+   20400    80.194701    15681         5941         9740 
+number of iterations: 1240 
+   20500    80.615298    15793         5979         9814 
+number of iterations: 1323 
+   20600     81.04461    15910         6018         9892 
+number of iterations: 1497 
+   20700    81.494029    16016         6063         9953 
+number of iterations: 1361 
+   20800    81.930368    16123         6110        10013 
+number of iterations: 1757 
+   20900    82.409579    16202         6141        10061 
+number of iterations: 1834 
+   21000    82.894425    16329         6192        10137 
+number of iterations: 1284 
+   21100    83.323563    16449         6242        10207 
+number of iterations: 1459 
+   21200    83.804076    16570         6284        10286 
+number of iterations: 1101 
+   21300    84.221576    16685         6327        10358 
+number of iterations: 1447 
+   21400     84.67447    16814         6380        10434 
+number of iterations: 1461 
+   21500    85.132608    16947         6433        10514 
+number of iterations: 1553 
+   21600    85.631934    17071         6486        10585 
+number of iterations: 1730 
+   21700    86.120284    17182         6520        10662 
+number of iterations: 1696 
+   21800    86.606382    17267         6561        10706 
+number of iterations: 1457 
+   21900    87.073522    17372         6611        10761 
+number of iterations: 1033 
+   22000    87.503865    17488         6657        10831 
+number of iterations: 1496 
+   22100    87.970212    17623         6712        10911 
+number of iterations: 1569 
+   22200    88.446804    17730         6753        10977 
+number of iterations: 1506 
+   22300    88.945347    17856         6803        11053 
+number of iterations: 1471 
+   22400    89.414959    17962         6849        11113 
+number of iterations: 1400 
+   22500    89.877198    18070         6898        11172 
+number of iterations: 1221 
+   22600    90.324299    18179         6945        11234 
+number of iterations: 1648 
+   22700     90.81259    18282         6986        11296 
+number of iterations: 1330 
+   22800    91.270579    18421         7040        11381 
+number of iterations: 1592 
+   22900    91.758949    18539         7096        11443 
+number of iterations: 1435 
+   23000    92.235662    18652         7140        11512 
+number of iterations: 1566 
+   23100    92.714957    18784         7179        11605 
+number of iterations: 1586 
+   23200    93.204112    18892         7213        11679 
+number of iterations: 1397 
+   23300    93.678063    19008         7258        11750 
+number of iterations: 1549 
+   23400    94.166937    19099         7289        11810 
+number of iterations: 1622 
+   23500    94.660493    19211         7331        11880 
+number of iterations: 1410 
+   23600    95.135582    19310         7371        11939 
+number of iterations: 1411 
+   23700    95.644174    19436         7422        12014 
+number of iterations: 1649 
+   23800    96.148193    19572         7467        12105 
+number of iterations: 1460 
+   23900    96.635542    19693         7505        12188 
+number of iterations: 1481 
+   24000    97.129723    19805         7543        12262 
+number of iterations: 1400 
+   24100    97.607619    19908         7590        12318 
+number of iterations: 988 
+   24200    98.046329    20019         7634        12385 
+number of iterations: 1380 
+   24300     98.53082    20127         7673        12454 
+number of iterations: 1511 
+   24400    99.023864    20233         7708        12525 
+number of iterations: 1225 
+   24500    99.492102    20355         7760        12595 
+number of iterations: 1464 
+   24600    99.985283    20466         7801        12665 
+number of iterations: 1438 
+   24700    100.47334    20583         7837        12746 
+number of iterations: 1213 
+   24800    100.94452    20705         7890        12815 
+number of iterations: 1613 
+   24900    101.45549    20831         7939        12892 
+number of iterations: 1582 
+   25000    101.96591    20961         8001        12960 
+number of iterations: 1181 
+   25100    102.43239    21085         8053        13032 
+number of iterations: 1404 
+   25200    102.92167    21189         8099        13090 
+number of iterations: 1391 
+   25300    103.41133    21314         8145        13169 
+number of iterations: 1265 
+   25400    103.89205    21423         8189        13234 
+number of iterations: 1427 
+   25500    104.39183    21533         8238        13295 
+number of iterations: 1422 
+   25600    104.89119    21651         8286        13365 
+number of iterations: 1197 
+   25700     105.3714    21771         8327        13444 
+number of iterations: 1432 
+   25800    105.87489    21882         8372        13510 
+number of iterations: 1278 
+   25900    106.36391    22004         8413        13591 
+number of iterations: 1551 
+   26000    106.88418    22140         8463        13677 
+number of iterations: 1505 
+   26100    107.39309    22271         8512        13759 
+number of iterations: 1771 
+   26200    107.92945    22407         8565        13842 
+number of iterations: 1463 
+   26300     108.4742    22528         8600        13928 
+number of iterations: 1390 
+   26400    108.97712    22648         8637        14011 
+number of iterations: 1392 
+   26500    109.48397    22781         8688        14093 
+number of iterations: 1481 
+   26600    110.00018    22914         8737        14177 
+number of iterations: 1583 
+   26700    110.52791    23004         8772        14232 
+number of iterations: 1295 
+   26800    111.02673    23116         8817        14299 
+number of iterations: 1019 
+   26900    111.50181    23237         8865        14372 
+number of iterations: 1271 
+   27000    112.00379    23362         8923        14439 
+number of iterations: 1357 
+   27100    112.50791    23444         8950        14494 
+number of iterations: 1250 
+   27200    112.99998    23562         9000        14562 
+number of iterations: 1431 
+   27300    113.51427    23666         9039        14627 
+number of iterations: 1350 
+   27400    114.05422    23798         9090        14708 
+number of iterations: 1495 
+   27500    114.58052    23931         9148        14783 
+number of iterations: 1414 
+   27600    115.09589    24051         9193        14858 
+number of iterations: 1417 
+   27700    115.64463    24182         9248        14934 
+number of iterations: 1417 
+   27800    116.16149    24308         9296        15012 
+number of iterations: 1086 
+   27900    116.64662    24437         9349        15088 
+number of iterations: 1425 
+   28000     117.2061    24538         9389        15149 
+number of iterations: 1417 
+   28100    117.72258    24661         9436        15225 
+number of iterations: 1336 
+   28200    118.23172    24792         9491        15301 
+number of iterations: 1435 
+   28300    118.75513    24908         9535        15373 
+number of iterations: 1379 
+   28400    119.27139    25028         9579        15449 
+number of iterations: 1488 
+   28500    119.80475    25136         9622        15514 
+number of iterations: 1490 
+   28600    120.33591    25248         9666        15582 
+number of iterations: 1548 
+   28700    120.87367    25365         9709        15656 
+number of iterations: 1607 
+   28800    121.41881    25476         9762        15714 
+number of iterations: 1462 
+   28900     121.9515    25596         9810        15786 
+number of iterations: 989 
+   29000    122.44868    25720         9849        15871 
+number of iterations: 1101 
+   29100    122.94577    25830         9887        15943 
+number of iterations: 1164 
+   29200    123.44853    25977         9931        16046 
+number of iterations: 1253 
+   29300    123.96374    26090         9975        16115 
+number of iterations: 1184 
+   29400     124.5071    26224        10023        16201 
+number of iterations: 1160 
+   29500    125.01676    26351        10078        16273 
+number of iterations: 1166 
+   29600    125.52919    26482        10136        16346 
+number of iterations: 1513 
+   29700    126.07592    26602        10187        16415 
+number of iterations: 1219 
+   29800    126.62929    26718        10218        16500 
+number of iterations: 1404 
+   29900    127.20505    26866        10273        16593 
+number of iterations: 1589 
+   30000    127.76856    26994        10326        16668 
+number of iterations: 1495 
+   30100    128.31514    27138        10390        16748 
+number of iterations: 1399 
+   30200    128.85328    27252        10438        16814 
+number of iterations: 958 
+   30300    129.35107    27372        10501        16871 
+number of iterations: 1339 
+   30400    129.89506    27475        10543        16932 
+number of iterations: 1248 
+   30500    130.42337    27598        10581        17017 
+number of iterations: 1227 
+   30600    130.94914    27712        10621        17091 
+number of iterations: 1321 
+   30700    131.48917    27833        10669        17164 
+number of iterations: 1123 
+   30800    132.01095    27957        10713        17244 
+number of iterations: 1453 
+   30900    132.60522    28084        10752        17332 
+number of iterations: 1326 
+   31000    133.15372    28211        10799        17412 
+number of iterations: 1553 
+   31100    133.75351    28361        10850        17511 
+number of iterations: 1367 
+   31200    134.30038    28487        10898        17589 
+number of iterations: 1436 
+   31300    134.85616    28625        10938        17687 
+number of iterations: 1279 
+   31400    135.39943    28777        10989        17788 
+number of iterations: 1203 
+   31500    135.97206    28909        11042        17867 
+number of iterations: 1410 
+   31600    136.56727    29031        11093        17938 
+number of iterations: 1114 
+   31700    137.10105    29154        11143        18011 
+number of iterations: 1642 
+   31800    137.68774    29245        11185        18060 
+number of iterations: 1081 
+   31900    138.21657    29370        11237        18133 
+number of iterations: 1021 
+   32000    138.78351    29505        11288        18217 
+number of iterations: 1305 
+   32100    139.33108    29651        11340        18311 
+number of iterations: 1658 
+   32200     139.9155    29793        11403        18390 
+number of iterations: 1451 
+   32300    140.48411    29935        11451        18484 
+number of iterations: 1350 
+   32400    141.04292    30057        11494        18563 
+number of iterations: 1225 
+   32500    141.59189    30203        11551        18652 
+number of iterations: 1426 
+   32600    142.16253    30328        11590        18738 
+number of iterations: 1060 
+   32700    142.73839    30475        11642        18833 
+number of iterations: 1391 
+   32800    143.31012    30597        11689        18908 
+number of iterations: 1263 
+   32900    143.86945    30720        11737        18983 
+number of iterations: 1679 
+   33000    144.47265    30819        11782        19037 
+number of iterations: 1313 
+   33100    145.06905    30930        11828        19102 
+number of iterations: 1143 
+   33200    145.61474    31072        11883        19189 
+number of iterations: 1112 
+   33300    146.15857    31200        11933        19267 
+number of iterations: 1444 
+   33400    146.73663    31337        11978        19359 
+number of iterations: 1481 
+   33500    147.31915    31489        12053        19436 
+number of iterations: 1152 
+   33600    147.87378    31622        12103        19519 
+number of iterations: 1222 
+   33700     148.4394    31749        12150        19599 
+number of iterations: 1154 
+   33800    148.99992    31882        12198        19684 
+number of iterations: 1169 
+   33900    149.56369    31991        12250        19741 
+number of iterations: 1478 
+   34000    150.16128    32110        12301        19809 
+number of iterations: 1343 
+   34100    150.73517    32249        12357        19892 
+number of iterations: 1380 
+   34200    151.31836    32376        12411        19965 
+number of iterations: 1338 
+   34300     151.8987    32495        12457        20038 
+number of iterations: 1204 
+   34400    152.46741    32624        12513        20111 
+number of iterations: 1334 
+   34500    153.08884    32747        12564        20183 
+number of iterations: 1248 
+   34600    153.66412    32879        12604        20275 
+number of iterations: 1315 
+   34700    154.24539    33017        12651        20366 
+number of iterations: 1314 
+   34800     154.8308    33163        12712        20451 
+number of iterations: 1211 
+   34900    155.41045    33298        12768        20530 
+number of iterations: 1445 
+   35000    156.01584    33430        12817        20613 
+number of iterations: 1258 
+   35100    156.59313    33589        12887        20702 
+number of iterations: 1410 
+   35200    157.18911    33728        12944        20784 
+number of iterations: 1445 
+   35300    157.78932    33854        12998        20856 
+number of iterations: 1136 
+   35400    158.36409    33979        13056        20923 
+number of iterations: 1420 
+   35500    158.96577    34100        13102        20998 
+number of iterations: 1166 
+   35600    159.54359    34247        13147        21100 
+number of iterations: 1572 
+   35700    160.16362    34381        13198        21183 
+number of iterations: 1256 
+   35800    160.75397    34525        13248        21277 
+number of iterations: 1263 
+   35900    161.34921    34664        13308        21356 
+number of iterations: 1101 
+   36000    161.93429    34795        13355        21440 
+number of iterations: 1114 
+   36100    162.55588    34922        13401        21521 
+number of iterations: 1157 
+   36200    163.13999    35039        13446        21593 
+number of iterations: 1162 
+   36300    163.72799    35165        13496        21669 
+number of iterations: 1068 
+   36400    164.30567    35309        13539        21770 
+number of iterations: 1295 
+   36500    164.90479    35460        13590        21870 
+number of iterations: 1411 
+   36600    165.52227    35589        13635        21954 
+number of iterations: 1132 
+   36700    166.11386    35727        13688        22039 
+number of iterations: 1508 
+   36800    166.74294    35864        13745        22119 
+number of iterations: 1084 
+   36900    167.33222    35968        13796        22172 
+number of iterations: 1082 
+   37000    167.92428    36112        13857        22255 
+number of iterations: 1202 
+   37100    168.52106    36271        13911        22360 
+number of iterations: 1528 
+   37200    169.14628    36386        13958        22428 
+number of iterations: 1149 
+   37300    169.73317    36507        14009        22498 
+number of iterations: 1392 
+   37400    170.34902    36642        14064        22578 
+number of iterations: 1182 
+   37500    170.94791    36770        14109        22661 
+number of iterations: 1314 
+   37600     171.5624    36920        14161        22759 
+number of iterations: 1360 
+   37700    172.18482    37053        14209        22844 
+number of iterations: 1159 
+   37800    172.78914    37200        14266        22934 
+number of iterations: 1112 
+   37900    173.39704    37321        14312        23009 
+number of iterations: 1160 
+   38000    174.00613    37438        14353        23085 
+number of iterations: 1414 
+   38100    174.62978    37598        14408        23190 
+number of iterations: 1329 
+   38200    175.24853    37741        14447        23294 
+number of iterations: 1299 
+   38300    175.86707    37905        14514        23391 
+number of iterations: 1446 
+   38400    176.50335    38055        14581        23474 
+number of iterations: 1440 
+   38500     177.1387    38205        14643        23562 
+number of iterations: 1186 
+   38600    177.75353    38339        14696        23643 
+number of iterations: 1268 
+   38700    178.37462    38474        14752        23722 
+number of iterations: 1273 
+   38800    178.99952    38599        14798        23801 
+number of iterations: 1339 
+   38900     179.6299    38728        14847        23881 
+number of iterations: 1477 
+   39000    180.27699    38879        14907        23972 
+number of iterations: 1056 
+   39100     180.9221    39040        14960        24080 
+number of iterations: 1276 
+   39200    181.54503    39171        15005        24166 
+number of iterations: 1198 
+   39300    182.16378    39303        15060        24243 
+number of iterations: 1242 
+   39400    182.78994    39424        15112        24312 
+number of iterations: 1222 
+   39500    183.41662    39547        15171        24376 
+number of iterations: 1355 
+   39600    184.05487    39675        15219        24456 
+number of iterations: 1472 
+   39700    184.70336    39803        15270        24533 
+number of iterations: 1062 
+   39800    185.36174    39950        15330        24620 
+number of iterations: 1110 
+   39900     185.9771    40082        15383        24699 
+number of iterations: 1564 
+   40000    186.63953    40247        15450        24797 
+Loop time of 186.64 on 10 procs for 40000 steps with 40247 atoms
+
+Performance: 185169745.515 tau/day, 214.317 timesteps/s
+97.2% CPU use with 10 MPI tasks x no OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.0022415  | 7.9828     | 48.473     | 525.7 |  4.28
+Neigh   | 0.14981    | 4.7773     | 27.393     | 385.3 |  2.56
+Comm    | 0.066938   | 2.0921     | 5.186      | 128.9 |  1.12
+Output  | 0.018208   | 1.1793     | 1.4099     |  39.3 |  0.63
+Modify  | 84.358     | 87.84      | 104.16     |  64.4 | 47.06
+Other   |            | 82.77      |            |       | 44.35
+
+Nlocal:    4024.7 ave 18698 max 0 min
+Histogram: 7 0 0 0 0 1 1 0 0 1
+Nghost:    532.5 ave 2556 max 0 min
+Histogram: 7 0 0 0 1 1 0 0 0 1
+Neighs:    27182.1 ave 128733 max 0 min
+Histogram: 7 0 0 0 0 2 0 0 0 1
+
+Total # of neighbors = 271821
+Ave neighs/atom = 6.75382
+Neighbor list builds = 1239
+Dangerous builds = 0
+
+timestep 2.5
+
+unfix kgm
+unfix g1
+unfix d1
+unfix e1
+
+fix s1 all shear 1 v_viscosity v_shearRate v_height zx 0 800000
+
+run 200000
+Per MPI rank memory allocation (min/avg/max) = 12.27 | 13.48 | 21.89 Mbytes
+Step CPU Atoms c_myNtypes[1] c_myNtypes[2] 
+   40000            0    40247        15450        24797 
+   40100     1.074117    40247        15450        24797 
+   40200    2.3685964    40247        15450        24797 
+   40300     3.745126    40247        15450        24797 
+   40400    5.1746909    40247        15450        24797 
+   40500    6.6376256    40247        15450        24797 
+   40600    8.0599057    40247        15450        24797 
+   40700    9.4956604    40247        15450        24797 
+   40800    10.808438    40247        15450        24797 
+   40900    12.055037    40247        15450        24797 
+   41000    13.306383    40247        15450        24797 
+   41100    14.675153    40247        15450        24797 
+   41200     16.02674    40247        15450        24797 
+   41300    17.251222    40247        15450        24797 
+   41400    18.474565    40247        15450        24797 
+   41500    19.699116    40247        15450        24797 
+   41600    20.924099    40247        15450        24797 
+   41700    22.150159    40247        15450        24797 
+   41800    23.376066    40247        15450        24797 
+   41900    24.602052    40247        15450        24797 
+   42000    25.832038    40247        15450        24797 
+   42100    27.057896    40247        15450        24797 
+   42200    28.282935    40247        15450        24797 
+   42300    29.508322    40247        15450        24797 
+   42400    30.734343    40247        15450        24797 
+   42500    31.961345    40247        15450        24797 
+   42600     33.18728    40247        15450        24797 
+   42700    34.412468    40247        15450        24797 
+   42800    35.640395    40247        15450        24797 
+   42900    36.864153    40247        15450        24797 
+   43000    38.089315    40247        15450        24797 
+   43100    39.308281    40247        15450        24797 
+   43200    40.534717    40247        15450        24797 
+   43300    41.761907    40247        15450        24797 
+   43400    42.987112    40247        15450        24797 
+   43500    44.213129    40247        15450        24797 
+   43600    45.439201    40247        15450        24797 
+   43700    46.668533    40247        15450        24797 
+   43800    47.891995    40247        15450        24797 
+   43900    49.111355    40247        15450        24797 
+   44000    50.336186    40247        15450        24797 
+   44100    51.564676    40247        15450        24797 
+   44200    52.787493    40247        15450        24797 
+   44300    54.013089    40247        15450        24797 
+   44400    55.238968    40247        15450        24797 
+   44500    56.467473    40247        15450        24797 
+   44600    57.687061    40247        15450        24797 
+   44700    58.912504    40247        15450        24797 
+   44800    60.138727    40247        15450        24797 
+   44900    61.362512    40247        15450        24797 
+   45000      62.5901    40247        15450        24797 
+   45100    63.816271    40247        15450        24797 
+   45200    65.042786    40247        15450        24797 
+   45300    66.269892    40247        15450        24797 
+   45400    67.497645    40247        15450        24797 
+   45500    68.719722    40247        15450        24797 
+   45600     69.94111    40247        15450        24797 
+   45700    71.168088    40247        15450        24797 
+   45800    72.393191    40247        15450        24797 
+   45900    73.622551    40247        15450        24797 
+   46000     74.84857    40247        15450        24797 
+   46100    76.074476    40247        15450        24797 
+   46200    77.301456    40247        15450        24797 
+   46300    78.526874    40247        15450        24797 
+   46400    79.751674    40247        15450        24797 
+   46500    80.978724    40247        15450        24797 
+   46600    82.201218    40247        15450        24797 
+   46700    83.422554    40247        15450        24797 
+   46800    84.644557    40247        15450        24797 
+   46900    85.874679    40247        15450        24797 
+   47000    87.101277    40247        15450        24797 
+   47100    88.328283    40247        15450        24797 
+   47200    89.548533    40247        15450        24797 
+   47300    90.774457    40247        15450        24797 
+   47400     92.00179    40247        15450        24797 
+   47500    93.226915    40247        15450        24797 
+   47600    94.451831    40247        15450        24797 
+   47700    95.679343    40247        15450        24797 
+   47800    96.902784    40247        15450        24797 
+   47900    98.130188    40247        15450        24797 
+   48000    99.355798    40247        15450        24797 
+   48100    100.58376    40247        15450        24797 
+   48200     101.8104    40247        15450        24797 
+   48300    103.03554    40247        15450        24797 
+   48400     104.2609    40247        15450        24797 
+   48500    105.48749    40247        15450        24797 
+   48600     106.7069    40247        15450        24797 
+   48700    107.93276    40247        15450        24797 
+   48800    109.15746    40247        15450        24797 
+   48900    110.38246    40247        15450        24797 
+   49000    111.61008    40247        15450        24797 
+   49100    112.83696    40247        15450        24797 
+   49200     114.0625    40247        15450        24797 
+   49300     115.2892    40247        15450        24797 
+   49400    116.51117    40247        15450        24797 
+   49500     117.7415    40247        15450        24797 
+   49600    118.96658    40247        15450        24797 
+   49700     120.1919    40247        15450        24797 
+   49800    121.41964    40247        15450        24797 
+   49900    122.64596    40247        15450        24797 
+   50000      123.872    40247        15450        24797 
+   50100    125.08992    40247        15450        24797 
+   50200    126.31313    40247        15450        24797 
+   50300    127.54107    40247        15450        24797 
+   50400    128.76598    40247        15450        24797 
+   50500    129.98749    40247        15450        24797 
+   50600    131.21575    40247        15450        24797 
+   50700    132.44255    40247        15450        24797 
+   50800    133.67197    40247        15450        24797 
+   50900    134.89737    40247        15450        24797 
+   51000    136.12335    40247        15450        24797 
+   51100    137.35045    40247        15450        24797 
+   51200    138.57759    40247        15450        24797 
+   51300    139.80066    40247        15450        24797 
+   51400    141.02688    40247        15450        24797 
+   51500     142.2532    40247        15450        24797 
+   51600    143.48061    40247        15450        24797 
+   51700    144.70687    40247        15450        24797 
+   51800    145.92457    40247        15450        24797 
+   51900    147.15031    40247        15450        24797 
+   52000    148.37701    40247        15450        24797 
+   52100     149.6022    40247        15450        24797 
+   52200    150.82848    40247        15450        24797 
+   52300     152.0553    40247        15450        24797 
+   52400    153.27947    40247        15450        24797 
+   52500    154.50459    40247        15450        24797 
+   52600    155.73167    40247        15450        24797 
+   52700    156.95863    40247        15450        24797 
+   52800    158.18268    40247        15450        24797 
+   52900    159.40764    40247        15450        24797 
+   53000    160.63427    40247        15450        24797 
+   53100    161.85492    40247        15450        24797 
+   53200    163.08041    40247        15450        24797 
+   53300    164.30699    40247        15450        24797 
+   53400    165.53424    40247        15450        24797 
+   53500    166.75921    40247        15450        24797 
+   53600    167.98266    40247        15450        24797 
+   53700    169.20073    40247        15450        24797 
+   53800    170.42621    40247        15450        24797 
+   53900    171.65376    40247        15450        24797 
+   54000    172.88021    40247        15450        24797 
+   54100    174.10682    40247        15450        24797 
+   54200    175.33161    40247        15450        24797 
+   54300     176.5588    40247        15450        24797 
+   54400    177.78482    40247        15450        24797 
+   54500    179.01207    40247        15450        24797 
+   54600    180.23842    40247        15450        24797 
+   54700    181.46589    40247        15450        24797 
+   54800    182.69416    40247        15450        24797 
+   54900    183.92016    40247        15450        24797 
+   55000    185.14541    40247        15450        24797 
+   55100    186.37307    40247        15450        24797 
+   55200     187.6019    40247        15450        24797 
+   55300    188.82899    40247        15450        24797 
+   55400    190.05572    40247        15450        24797 
+   55500    191.28253    40247        15450        24797 
+   55600     192.5076    40247        15450        24797 
+   55700    193.73116    40247        15450        24797 
+   55800    194.95649    40247        15450        24797 
+   55900     196.1813    40247        15450        24797 
+   56000    197.40898    40247        15450        24797 
+   56100    198.63488    40247        15450        24797 
+   56200    199.86149    40247        15450        24797 
+   56300    201.08744    40247        15450        24797 
+   56400    202.30989    40247        15450        24797 
+   56500    203.53022    40247        15450        24797 
+   56600    204.75753    40247        15450        24797 
+   56700    205.97885    40247        15450        24797 
+   56800    207.20853    40247        15450        24797 
+   56900    208.43468    40247        15450        24797 
+   57000    209.66048    40247        15450        24797 
+   57100    210.88595    40247        15450        24797 
+   57200    212.11231    40247        15450        24797 
+   57300    213.33743    40247        15450        24797 
+   57400    214.56379    40247        15450        24797 
+   57500     215.7882    40247        15450        24797 
+   57600    217.01485    40247        15450        24797 
+   57700     218.2414    40247        15450        24797 
+   57800     219.4675    40247        15450        24797 
+   57900    220.69432    40247        15450        24797 
+   58000    221.91684    40247        15450        24797 
+   58100    223.13693    40247        15450        24797 
+   58200    224.35562    40247        15450        24797 
+   58300    225.58283    40247        15450        24797 
+   58400    226.80782    40247        15450        24797 
+   58500    228.03275    40247        15450        24797 
+   58600    229.25792    40247        15450        24797 
+   58700    230.48491    40247        15450        24797 
+   58800    231.71505    40247        15450        24797 
+   58900    232.94078    40247        15450        24797 
+   59000    234.16722    40247        15450        24797 
+   59100    235.39323    40247        15450        24797 
+   59200    236.62061    40247        15450        24797 
+   59300    237.84615    40247        15450        24797 
+   59400    239.06617    40247        15450        24797 
+   59500    240.28771    40247        15450        24797 
+   59600    241.51525    40247        15450        24797 
+   59700    242.74227    40247        15450        24797 
+   59800     243.9649    40247        15450        24797 
+   59900     245.1893    40247        15450        24797 
+   60000    246.41444    40247        15450        24797 
+   60100    247.64315    40247        15450        24797 
+   60200    248.86575    40247        15450        24797 
+   60300    250.08457    40247        15450        24797 
+   60400    251.31112    40247        15450        24797 
+   60500    252.54183    40247        15450        24797 
+   60600    253.76723    40247        15450        24797 
+   60700    254.99347    40247        15450        24797 
+   60800    256.22055    40247        15450        24797 
+   60900    257.44905    40247        15450        24797 
+   61000    258.67447    40247        15450        24797 
+   61100    259.89987    40247        15450        24797 
+   61200    261.12496    40247        15450        24797 
+   61300    262.35228    40247        15450        24797 
+   61400    263.57747    40247        15450        24797 
+   61500    264.80435    40247        15450        24797 
+   61600    266.02874    40247        15450        24797 
+   61700    267.25764    40247        15450        24797 
+   61800    268.48325    40247        15450        24797 
+   61900    269.70342    40247        15450        24797 
+   62000    270.93102    40247        15450        24797 
+   62100    272.15851    40247        15450        24797 
+   62200    273.38471    40247        15450        24797 
+   62300    274.61049    40247        15450        24797 
+   62400     275.8356    40247        15450        24797 
+   62500    277.06393    40247        15450        24797 
+   62600    278.28942    40247        15450        24797 
+   62700     279.5144    40247        15450        24797 
+   62800    280.74152    40247        15450        24797 
+   62900    281.96981    40247        15450        24797 
+   63000    283.19607    40247        15450        24797 
+   63100    284.42135    40247        15450        24797 
+   63200    285.64762    40247        15450        24797 
+   63300    286.87583    40247        15450        24797 
+   63400    288.10127    40247        15450        24797 
+   63500    289.32541    40247        15450        24797 
+   63600     290.5525    40247        15450        24797 
+   63700    291.77968    40247        15450        24797 
+   63800    293.00395    40247        15450        24797 
+   63900    294.22887    40247        15450        24797 
+   64000    295.45399    40247        15450        24797 
+   64100    296.68466    40247        15450        24797 
+   64200    297.91009    40247        15450        24797 
+   64300    299.13592    40247        15450        24797 
+   64400    300.36203    40247        15450        24797 
+   64500    301.59054    40247        15450        24797 
+   64600    302.81521    40247        15450        24797 
+   64700    304.03761    40247        15450        24797 
+   64800    305.26351    40247        15450        24797 
+   64900    306.48965    40247        15450        24797 
+   65000    307.71771    40247        15450        24797 
+   65100    308.94205    40247        15450        24797 
+   65200    310.16689    40247        15450        24797 
+   65300    311.39373    40247        15450        24797 
+   65400     312.6275    40247        15450        24797 
+   65500    313.85259    40247        15450        24797 
+   65600    315.07859    40247        15450        24797 
+   65700    316.30444    40247        15450        24797 
+   65800    317.53191    40247        15450        24797 
+   65900    318.75736    40247        15450        24797 
+   66000    319.98253    40247        15450        24797 
+   66100    321.20641    40247        15450        24797 
+   66200    322.43584    40247        15450        24797 
+   66300    323.66194    40247        15450        24797 
+   66400    324.88793    40247        15450        24797 
+   66500    326.11428    40247        15450        24797 
+   66600    327.34367    40247        15450        24797 
+   66700    328.56784    40247        15450        24797 
+   66800    329.79256    40247        15450        24797 
+   66900    331.01897    40247        15450        24797 
+   67000    332.24793    40247        15450        24797 
+   67100    333.47398    40247        15450        24797 
+   67200    334.69945    40247        15450        24797 
+   67300    335.92537    40247        15450        24797 
+   67400    337.15248    40247        15450        24797 
+   67500    338.37339    40247        15450        24797 
+   67600    339.60071    40247        15450        24797 
+   67700    340.82455    40247        15450        24797 
+   67800      342.052    40247        15450        24797 
+   67900    343.27903    40247        15450        24797 
+   68000    344.49669    40247        15450        24797 
+   68100    345.71601    40247        15450        24797 
+   68200    346.94009    40247        15450        24797 
+   68300    348.15341    40247        15450        24797 
+   68400    349.37868    40247        15450        24797 
+   68500    350.60532    40247        15450        24797 
+   68600    351.83185    40247        15450        24797 
+   68700    353.05876    40247        15450        24797 
+   68800    354.28307    40247        15450        24797 
+   68900    355.50799    40247        15450        24797 
+   69000    356.73951    40247        15450        24797 
+   69100    357.96573    40247        15450        24797 
+   69200    359.19078    40247        15450        24797 
+   69300    360.41615    40247        15450        24797 
+   69400    361.64496    40247        15450        24797 
+   69500    362.86191    40247        15450        24797 
+   69600    364.08593    40247        15450        24797 
+   69700    365.30512    40247        15450        24797 
+   69800    366.52679    40247        15450        24797 
+   69900    367.74947    40247        15450        24797 
+   70000    368.97644    40247        15450        24797 
+   70100    370.19918    40247        15450        24797 
+   70200    371.42517    40247        15450        24797 
+   70300    372.65513    40247        15450        24797 
+   70400    373.88026    40247        15450        24797 
+   70500    375.10556    40247        15450        24797 
+   70600    376.33321    40247        15450        24797 
+   70700    377.56058    40247        15450        24797 
+   70800    378.78562    40247        15450        24797 
+   70900    380.01157    40247        15450        24797 
+   71000    381.23903    40247        15450        24797 
+   71100    382.46584    40247        15450        24797 
+   71200    383.69084    40247        15450        24797 
+   71300     384.9171    40247        15450        24797 
+   71400    386.14412    40247        15450        24797 
+   71500    387.37258    40247        15450        24797 
+   71600    388.59435    40247        15450        24797 
+   71700    389.81894    40247        15450        24797 
+   71800    391.04557    40247        15450        24797 
+   71900    392.27498    40247        15450        24797 
+   72000    393.50055    40247        15450        24797 
+   72100    394.72413    40247        15450        24797 
+   72200    395.95035    40247        15450        24797 
+   72300    397.17792    40247        15450        24797 
+   72400    398.40508    40247        15450        24797 
+   72500    399.62006    40247        15450        24797 
+   72600    400.84214    40247        15450        24797 
+   72700    402.06941    40247        15450        24797 
+   72800    403.29458    40247        15450        24797 
+   72900    404.52062    40247        15450        24797 
+   73000    405.74848    40247        15450        24797 
+   73100    406.97097    40247        15450        24797 
+   73200    408.19755    40247        15450        24797 
+   73300    409.42365    40247        15450        24797 
+   73400    410.65187    40247        15450        24797 
+   73500    411.87737    40247        15450        24797 
+   73600    413.10249    40247        15450        24797 
+   73700    414.32815    40247        15450        24797 
+   73800    415.55709    40247        15450        24797 
+   73900    416.78464    40247        15450        24797 
+   74000     418.0103    40247        15450        24797 
+   74100    419.23457    40247        15450        24797 
+   74200    420.46178    40247        15450        24797 
+   74300    421.69322    40247        15450        24797 
+   74400    422.91889    40247        15450        24797 
+   74500     424.1448    40247        15450        24797 
+   74600    425.37017    40247        15450        24797 
+   74700    426.59761    40247        15450        24797 
+   74800    427.82326    40247        15450        24797 
+   74900    429.04892    40247        15450        24797 
+   75000     430.2728    40247        15450        24797 
+   75100    431.50028    40247        15450        24797 
+   75200    432.73183    40247        15450        24797 
+   75300    433.95811    40247        15450        24797 
+   75400    435.18023    40247        15450        24797 
+   75500    436.40212    40247        15450        24797 
+   75600    437.63062    40247        15450        24797 
+   75700    438.85532    40247        15450        24797 
+   75800    440.08356    40247        15450        24797 
+   75900    441.31145    40247        15450        24797 
+   76000    442.53859    40247        15450        24797 
+   76100    443.76319    40247        15450        24797 
+   76200    444.98077    40247        15450        24797 
+   76300    446.20768    40247        15450        24797 
+   76400    447.43556    40247        15450        24797 
+   76500    448.66132    40247        15450        24797 
+   76600    449.87696    40247        15450        24797 
+   76700    451.10346    40247        15450        24797 
+   76800    452.32984    40247        15450        24797 
+   76900    453.55491    40247        15450        24797 
+   77000     454.7798    40247        15450        24797 
+   77100    456.00775    40247        15450        24797 
+   77200    457.23774    40247        15450        24797 
+   77300    458.46287    40247        15450        24797 
+   77400    459.68787    40247        15450        24797 
+   77500    460.91463    40247        15450        24797 
+   77600     462.1426    40247        15450        24797 
+   77700    463.36853    40247        15450        24797 
+   77800    464.59548    40247        15450        24797 
+   77900    465.82287    40247        15450        24797 
+   78000     467.0501    40247        15450        24797 
+   78100    468.27539    40247        15450        24797 
+   78200     469.4945    40247        15450        24797 
+   78300    470.72188    40247        15450        24797 
+   78400    471.94878    40247        15450        24797 
+   78500    473.17575    40247        15450        24797 
+   78600    474.40116    40247        15450        24797 
+   78700    475.62787    40247        15450        24797 
+   78800    476.85502    40247        15450        24797 
+   78900    478.06647    40247        15450        24797 
+   79000    479.29332    40247        15450        24797 
+   79100    480.52155    40247        15450        24797 
+   79200     481.7509    40247        15450        24797 
+   79300     482.9768    40247        15450        24797 
+   79400    484.20218    40247        15450        24797 
+   79500    485.42766    40247        15450        24797 
+   79600    486.65289    40247        15450        24797 
+   79700    487.87925    40247        15450        24797 
+   79800     489.1034    40247        15450        24797 
+   79900    490.33146    40247        15450        24797 
+   80000    491.55891    40247        15450        24797 
+   80100    492.78891    40247        15450        24797 
+   80200    494.01391    40247        15450        24797 
+   80300    495.23965    40247        15450        24797 
+   80400    496.46678    40247        15450        24797 
+   80500    497.69266    40247        15450        24797 
+   80600    498.92044    40247        15450        24797 
+   80700    500.14609    40247        15450        24797 
+   80800    501.37458    40247        15450        24797 
+   80900    502.60291    40247        15450        24797 
+   81000    503.82781    40247        15450        24797 
+   81100    505.05239    40247        15450        24797 
+   81200     506.2818    40247        15450        24797 
+   81300    507.51039    40247        15450        24797 
+   81400    508.73613    40247        15450        24797 
+   81500    509.96236    40247        15450        24797 
+   81600    511.19172    40247        15450        24797 
+   81700    512.41598    40247        15450        24797 
+   81800    513.64148    40247        15450        24797 
+   81900    514.86787    40247        15450        24797 
+   82000    516.09457    40247        15450        24797 
+   82100    517.31952    40247        15450        24797 
+   82200    518.54037    40247        15450        24797 
+   82300    519.76645    40247        15450        24797 
+   82400     520.9946    40247        15450        24797 
+   82500    522.22272    40247        15450        24797 
+   82600    523.44897    40247        15450        24797 
+   82700      524.674    40247        15450        24797 
+   82800    525.90216    40247        15450        24797 
+   82900    527.12847    40247        15450        24797 
+   83000    528.34869    40247        15450        24797 
+   83100     529.5651    40247        15450        24797 
+   83200    530.79149    40247        15450        24797 
+   83300    532.01987    40247        15450        24797 
+   83400    533.24489    40247        15450        24797 
+   83500    534.47012    40247        15450        24797 
+   83600    535.69834    40247        15450        24797 
+   83700    536.92728    40247        15450        24797 
+   83800     538.1527    40247        15450        24797 
+   83900    539.37886    40247        15450        24797 
+   84000    540.60823    40247        15450        24797 
+   84100    541.83629    40247        15450        24797 
+   84200    543.06133    40247        15450        24797 
+   84300    544.28617    40247        15450        24797 
+   84400     545.5118    40247        15450        24797 
+   84500    546.74012    40247        15450        24797 
+   84600    547.96651    40247        15450        24797 
+   84700    549.19122    40247        15450        24797 
+   84800    550.41713    40247        15450        24797 
+   84900    551.64779    40247        15450        24797 
+   85000    552.87688    40247        15450        24797 
+   85100    554.10188    40247        15450        24797 
+   85200    555.32787    40247        15450        24797 
+   85300    556.55729    40247        15450        24797 
+   85400     557.7845    40247        15450        24797 
+   85500    559.01004    40247        15450        24797 
+   85600    560.23263    40247        15450        24797 
+   85700    561.45907    40247        15450        24797 
+   85800    562.68624    40247        15450        24797 
+   85900    563.91153    40247        15450        24797 
+   86000    565.13336    40247        15450        24797 
+   86100    566.36085    40247        15450        24797 
+   86200    567.58846    40247        15450        24797 
+   86300    568.81261    40247        15450        24797 
+   86400    570.03662    40247        15450        24797 
+   86500    571.26448    40247        15450        24797 
+   86600    572.49261    40247        15450        24797 
+   86700    573.71638    40247        15450        24797 
+   86800    574.94225    40247        15450        24797 
+   86900    576.16818    40247        15450        24797 
+   87000    577.39183    40247        15450        24797 
+   87100    578.60776    40247        15450        24797 
+   87200    579.83326    40247        15450        24797 
+   87300    581.06133    40247        15450        24797 
+   87400    582.28882    40247        15450        24797 
+   87500    583.51195    40247        15450        24797 
+   87600    584.73698    40247        15450        24797 
+   87700    585.96759    40247        15450        24797 
+   87800    587.19485    40247        15450        24797 
+   87900    588.42066    40247        15450        24797 
+   88000    589.64744    40247        15450        24797 
+   88100     590.8691    40247        15450        24797 
+   88200    592.09739    40247        15450        24797 
+   88300     593.3224    40247        15450        24797 
+   88400     594.5476    40247        15450        24797 
+   88500    595.77599    40247        15450        24797 
+   88600    597.00343    40247        15450        24797 
+   88700    598.23003    40247        15450        24797 
+   88800    599.45371    40247        15450        24797 
+   88900    600.67943    40247        15450        24797 
+   89000    601.90716    40247        15450        24797 
+   89100    603.13429    40247        15450        24797 
+   89200    604.35973    40247        15450        24797 
+   89300    605.58673    40247        15450        24797 
+   89400    606.81479    40247        15450        24797 
+   89500    608.03985    40247        15450        24797 
+   89600    609.25458    40247        15450        24797 
+   89700    610.47688    40247        15450        24797 
+   89800    611.70577    40247        15450        24797 
+   89900    612.93241    40247        15450        24797 
+   90000    614.15783    40247        15450        24797 
+   90100    615.38152    40247        15450        24797 
+   90200    616.61045    40247        15450        24797 
+   90300    617.83618    40247        15450        24797 
+   90400    619.06229    40247        15450        24797 
+   90500     620.2854    40247        15450        24797 
+   90600    621.50257    40247        15450        24797 
+   90700    622.73127    40247        15450        24797 
+   90800    623.95723    40247        15450        24797 
+   90900    625.17815    40247        15450        24797 
+   91000    626.40493    40247        15450        24797 
+   91100    627.63426    40247        15450        24797 
+   91200    628.85963    40247        15450        24797 
+   91300    630.08465    40247        15450        24797 
+   91400    631.31336    40247        15450        24797 
+   91500    632.54205    40247        15450        24797 
+   91600    633.76707    40247        15450        24797 
+   91700    634.98303    40247        15450        24797 
+   91800     636.2092    40247        15450        24797 
+   91900    637.43688    40247        15450        24797 
+   92000    638.66184    40247        15450        24797 
+   92100    639.88816    40247        15450        24797 
+   92200    641.11566    40247        15450        24797 
+   92300     642.3437    40247        15450        24797 
+   92400    643.56843    40247        15450        24797 
+   92500    644.79542    40247        15450        24797 
+   92600    646.01953    40247        15450        24797 
+   92700    647.24703    40247        15450        24797 
+   92800     648.4726    40247        15450        24797 
+   92900    649.69881    40247        15450        24797 
+   93000    650.92086    40247        15450        24797 
+   93100    652.14734    40247        15450        24797 
+   93200    653.37312    40247        15450        24797 
+   93300    654.59933    40247        15450        24797 
+   93400    655.82684    40247        15450        24797 
+   93500    657.05362    40247        15450        24797 
+   93600      658.279    40247        15450        24797 
+   93700    659.50426    40247        15450        24797 
+   93800    660.72988    40247        15450        24797 
+   93900    661.95674    40247        15450        24797 
+   94000     663.1826    40247        15450        24797 
+   94100    664.40776    40247        15450        24797 
+   94200      665.635    40247        15450        24797 
+   94300    666.86216    40247        15450        24797 
+   94400    668.08713    40247        15450        24797 
+   94500    669.31273    40247        15450        24797 
+   94600    670.53914    40247        15450        24797 
+   94700     671.7656    40247        15450        24797 
+   94800    672.99667    40247        15450        24797 
+   94900    674.22106    40247        15450        24797 
+   95000    675.44746    40247        15450        24797 
+   95100    676.67625    40247        15450        24797 
+   95200    677.90207    40247        15450        24797 
+   95300    679.12301    40247        15450        24797 
+   95400    680.34976    40247        15450        24797 
+   95500     681.5784    40247        15450        24797 
+   95600    682.80678    40247        15450        24797 
+   95700    684.03217    40247        15450        24797 
+   95800    685.25838    40247        15450        24797 
+   95900    686.48376    40247        15450        24797 
+   96000    687.71116    40247        15450        24797 
+   96100    688.93631    40247        15450        24797 
+   96200    690.16319    40247        15450        24797 
+   96300    691.38988    40247        15450        24797 
+   96400    692.61701    40247        15450        24797 
+   96500    693.84193    40247        15450        24797 
+   96600    695.06707    40247        15450        24797 
+   96700    696.29358    40247        15450        24797 
+   96800    697.52096    40247        15450        24797 
+   96900    698.74628    40247        15450        24797 
+   97000     699.9725    40247        15450        24797 
+   97100     701.1987    40247        15450        24797 
+   97200     702.4262    40247        15450        24797 
+   97300    703.65226    40247        15450        24797 
+   97400    704.87781    40247        15450        24797 
+   97500     706.1044    40247        15450        24797 
+   97600    707.33264    40247        15450        24797 
+   97700    708.55815    40247        15450        24797 
+   97800    709.78274    40247        15450        24797 
+   97900    711.00915    40247        15450        24797 
+   98000    712.23672    40247        15450        24797 
+   98100    713.46129    40247        15450        24797 
+   98200    714.68692    40247        15450        24797 
+   98300     715.9128    40247        15450        24797 
+   98400    717.13991    40247        15450        24797 
+   98500    718.36591    40247        15450        24797 
+   98600    719.59057    40247        15450        24797 
+   98700    720.81536    40247        15450        24797 
+   98800    722.04204    40247        15450        24797 
+   98900    723.26346    40247        15450        24797 
+   99000    724.48228    40247        15450        24797 
+   99100    725.70846    40247        15450        24797 
+   99200    726.93869    40247        15450        24797 
+   99300    728.16361    40247        15450        24797 
+   99400    729.38854    40247        15450        24797 
+   99500    730.61271    40247        15450        24797 
+   99600    731.84117    40247        15450        24797 
+   99700    733.07051    40247        15450        24797 
+   99800    734.29618    40247        15450        24797 
+   99900    735.52127    40247        15450        24797 
+  100000    736.74959    40247        15450        24797 
+  100100     737.9747    40247        15450        24797 
+  100200    739.19999    40247        15450        24797 
+  100300    740.42456    40247        15450        24797 
+  100400    741.65159    40247        15450        24797 
+  100500    742.87767    40247        15450        24797 
+  100600    744.10363    40247        15450        24797 
+  100700    745.32991    40247        15450        24797 
+  100800    746.55721    40247        15450        24797 
+  100900    747.78362    40247        15450        24797 
+  101000     749.0027    40247        15450        24797 
+  101100    750.22459    40247        15450        24797 
+  101200    751.45079    40247        15450        24797 
+  101300    752.67367    40247        15450        24797 
+  101400    753.89906    40247        15450        24797 
+  101500    755.12475    40247        15450        24797 
+  101600    756.35187    40247        15450        24797 
+  101700    757.57867    40247        15450        24797 
+  101800    758.79689    40247        15450        24797 
+  101900    760.01525    40247        15450        24797 
+  102000    761.24136    40247        15450        24797 
+  102100    762.46756    40247        15450        24797 
+  102200    763.68887    40247        15450        24797 
+  102300    764.91468    40247        15450        24797 
+  102400    766.14291    40247        15450        24797 
+  102500     767.3691    40247        15450        24797 
+  102600    768.59002    40247        15450        24797 
+  102700    769.81546    40247        15450        24797 
+  102800     771.0419    40247        15450        24797 
+  102900    772.26884    40247        15450        24797 
+  103000    773.49471    40247        15450        24797 
+  103100    774.72034    40247        15450        24797 
+  103200    775.94784    40247        15450        24797 
+  103300    777.17465    40247        15450        24797 
+  103400    778.40005    40247        15450        24797 
+  103500    779.62483    40247        15450        24797 
+  103600    780.85226    40247        15450        24797 
+  103700    782.07436    40247        15450        24797 
+  103800    783.30069    40247        15450        24797 
+  103900    784.52085    40247        15450        24797 
+  104000    785.74718    40247        15450        24797 
+  104100    786.97437    40247        15450        24797 
+  104200    788.20115    40247        15450        24797 
+  104300    789.42709    40247        15450        24797 
+  104400    790.65642    40247        15450        24797 
+  104500    791.88375    40247        15450        24797 
+  104600    793.11317    40247        15450        24797 
+  104700    794.33828    40247        15450        24797 
+  104800    795.56605    40247        15450        24797 
+  104900    796.79346    40247        15450        24797 
+  105000     798.0197    40247        15450        24797 
+  105100    799.24522    40247        15450        24797 
+  105200    800.47111    40247        15450        24797 
+  105300    801.69988    40247        15450        24797 
+  105400    802.92654    40247        15450        24797 
+  105500    804.15128    40247        15450        24797 
+  105600    805.37469    40247        15450        24797 
+  105700    806.60247    40247        15450        24797 
+  105800      807.829    40247        15450        24797 
+  105900    809.05646    40247        15450        24797 
+  106000     810.2814    40247        15450        24797 
+  106100    811.50824    40247        15450        24797 
+  106200     812.7363    40247        15450        24797 
+  106300    813.96406    40247        15450        24797 
+  106400    815.18991    40247        15450        24797 
+  106500    816.41665    40247        15450        24797 
+  106600     817.6443    40247        15450        24797 
+  106700    818.86958    40247        15450        24797 
+  106800    820.09466    40247        15450        24797 
+  106900    821.32127    40247        15450        24797 
+  107000    822.54898    40247        15450        24797 
+  107100    823.77697    40247        15450        24797 
+  107200    825.00268    40247        15450        24797 
+  107300     826.2286    40247        15450        24797 
+  107400    827.45577    40247        15450        24797 
+  107500    828.68068    40247        15450        24797 
+  107600    829.90404    40247        15450        24797 
+  107700    831.13103    40247        15450        24797 
+  107800    832.35891    40247        15450        24797 
+  107900     833.5835    40247        15450        24797 
+  108000    834.80957    40247        15450        24797 
+  108100    836.03781    40247        15450        24797 
+  108200    837.26029    40247        15450        24797 
+  108300    838.48601    40247        15450        24797 
+  108400    839.71276    40247        15450        24797 
+  108500    840.93901    40247        15450        24797 
+  108600    842.16563    40247        15450        24797 
+  108700    843.39156    40247        15450        24797 
+  108800    844.61726    40247        15450        24797 
+  108900    845.84283    40247        15450        24797 
+  109000    847.06862    40247        15450        24797 
+  109100    848.29315    40247        15450        24797 
+  109200    849.51812    40247        15450        24797 
+  109300     850.7443    40247        15450        24797 
+  109400       851.97    40247        15450        24797 
+  109500    853.19863    40247        15450        24797 
+  109600    854.42355    40247        15450        24797 
+  109700    855.65064    40247        15450        24797 
+  109800    856.87438    40247        15450        24797 
+  109900    858.09914    40247        15450        24797 
+  110000    859.32488    40247        15450        24797 
+  110100    860.55121    40247        15450        24797 
+  110200     861.7722    40247        15450        24797 
+  110300    862.99713    40247        15450        24797 
+  110400    864.22252    40247        15450        24797 
+  110500    865.44865    40247        15450        24797 
+  110600    866.67625    40247        15450        24797 
+  110700    867.90135    40247        15450        24797 
+  110800    869.12664    40247        15450        24797 
+  110900    870.35168    40247        15450        24797 
+  111000    871.57952    40247        15450        24797 
+  111100    872.80622    40247        15450        24797 
+  111200    874.03363    40247        15450        24797 
+  111300    875.25885    40247        15450        24797 
+  111400    876.48412    40247        15450        24797 
+  111500    877.70932    40247        15450        24797 
+  111600    878.93447    40247        15450        24797 
+  111700    880.15984    40247        15450        24797 
+  111800    881.37489    40247        15450        24797 
+  111900    882.60191    40247        15450        24797 
+  112000    883.82707    40247        15450        24797 
+  112100    885.05197    40247        15450        24797 
+  112200    886.26875    40247        15450        24797 
+  112300    887.49333    40247        15450        24797 
+  112400    888.71147    40247        15450        24797 
+  112500    889.93758    40247        15450        24797 
+  112600    891.16576    40247        15450        24797 
+  112700    892.39291    40247        15450        24797 
+  112800    893.61777    40247        15450        24797 
+  112900    894.84358    40247        15450        24797 
+  113000    896.06132    40247        15450        24797 
+  113100    897.28819    40247        15450        24797 
+  113200    898.51503    40247        15450        24797 
+  113300    899.74069    40247        15450        24797 
+  113400    900.96762    40247        15450        24797 
+  113500    902.19403    40247        15450        24797 
+  113600    903.41895    40247        15450        24797 
+  113700    904.64342    40247        15450        24797 
+  113800    905.86267    40247        15450        24797 
+  113900    907.08978    40247        15450        24797 
+  114000    908.31493    40247        15450        24797 
+  114100    909.54087    40247        15450        24797 
+  114200    910.76697    40247        15450        24797 
+  114300    911.99611    40247        15450        24797 
+  114400    913.22469    40247        15450        24797 
+  114500    914.45094    40247        15450        24797 
+  114600    915.68122    40247        15450        24797 
+  114700    916.90574    40247        15450        24797 
+  114800    918.13118    40247        15450        24797 
+  114900    919.35605    40247        15450        24797 
+  115000    920.58317    40247        15450        24797 
+  115100    921.80981    40247        15450        24797 
+  115200    923.03516    40247        15450        24797 
+  115300    924.26211    40247        15450        24797 
+  115400    925.48839    40247        15450        24797 
+  115500    926.71635    40247        15450        24797 
+  115600    927.94099    40247        15450        24797 
+  115700    929.16664    40247        15450        24797 
+  115800    930.39207    40247        15450        24797 
+  115900    931.62222    40247        15450        24797 
+  116000    932.84787    40247        15450        24797 
+  116100    934.07213    40247        15450        24797 
+  116200     935.2979    40247        15450        24797 
+  116300    936.52572    40247        15450        24797 
+  116400     937.7554    40247        15450        24797 
+  116500    938.98095    40247        15450        24797 
+  116600    940.20686    40247        15450        24797 
+  116700    941.43558    40247        15450        24797 
+  116800    942.66495    40247        15450        24797 
+  116900    943.89144    40247        15450        24797 
+  117000    945.11684    40247        15450        24797 
+  117100    946.34475    40247        15450        24797 
+  117200    947.57503    40247        15450        24797 
+  117300    948.80193    40247        15450        24797 
+  117400    950.02738    40247        15450        24797 
+  117500    951.25403    40247        15450        24797 
+  117600    952.47833    40247        15450        24797 
+  117700    953.70509    40247        15450        24797 
+  117800    954.93019    40247        15450        24797 
+  117900     956.1596    40247        15450        24797 
+  118000    957.39017    40247        15450        24797 
+  118100    958.61545    40247        15450        24797 
+  118200    959.84166    40247        15450        24797 
+  118300     961.0621    40247        15450        24797 
+  118400    962.29013    40247        15450        24797 
+  118500    963.51549    40247        15450        24797 
+  118600    964.74129    40247        15450        24797 
+  118700     965.9683    40247        15450        24797 
+  118800    967.19721    40247        15450        24797 
+  118900    968.42295    40247        15450        24797 
+  119000    969.64775    40247        15450        24797 
+  119100    970.87532    40247        15450        24797 
+  119200    972.10199    40247        15450        24797 
+  119300     973.3329    40247        15450        24797 
+  119400    974.55284    40247        15450        24797 
+  119500     975.7803    40247        15450        24797 
+  119600    976.99842    40247        15450        24797 
+  119700    978.22441    40247        15450        24797 
+  119800    979.44989    40247        15450        24797 
+  119900    980.67536    40247        15450        24797 
+  120000    981.89285    40247        15450        24797 
+  120100     983.1195    40247        15450        24797 
+  120200    984.34112    40247        15450        24797 
+  120300    985.56847    40247        15450        24797 
+  120400    986.78286    40247        15450        24797 
+  120500    988.00788    40247        15450        24797 
+  120600     989.2298    40247        15450        24797 
+  120700    990.45624    40247        15450        24797 
+  120800    991.68549    40247        15450        24797 
+  120900    992.91179    40247        15450        24797 
+  121000    994.13221    40247        15450        24797 
+  121100    995.35754    40247        15450        24797 
+  121200    996.58387    40247        15450        24797 
+  121300    997.80926    40247        15450        24797 
+  121400    999.03545    40247        15450        24797 
+  121500    1000.2618    40247        15450        24797 
+  121600    1001.4885    40247        15450        24797 
+  121700    1002.7166    40247        15450        24797 
+  121800    1003.9427    40247        15450        24797 
+  121900    1005.1677    40247        15450        24797 
+  122000     1006.395    40247        15450        24797 
+  122100     1007.622    40247        15450        24797 
+  122200    1008.8476    40247        15450        24797 
+  122300    1010.0732    40247        15450        24797 
+  122400     1011.301    40247        15450        24797 
+  122500    1012.5283    40247        15450        24797 
+  122600    1013.7538    40247        15450        24797 
+  122700      1014.98    40247        15450        24797 
+  122800    1016.2067    40247        15450        24797 
+  122900     1017.431    40247        15450        24797 
+  123000    1018.6547    40247        15450        24797 
+  123100    1019.8799    40247        15450        24797 
+  123200     1021.107    40247        15450        24797 
+  123300    1022.3345    40247        15450        24797 
+  123400    1023.5618    40247        15450        24797 
+  123500     1024.787    40247        15450        24797 
+  123600    1026.0133    40247        15450        24797 
+  123700    1027.2387    40247        15450        24797 
+  123800     1028.465    40247        15450        24797 
+  123900    1029.6903    40247        15450        24797 
+  124000    1030.9157    40247        15450        24797 
+  124100    1032.1431    40247        15450        24797 
+  124200    1033.3724    40247        15450        24797 
+  124300    1034.5983    40247        15450        24797 
+  124400    1035.8217    40247        15450        24797 
+  124500    1037.0483    40247        15450        24797 
+  124600    1038.2739    40247        15450        24797 
+  124700    1039.4919    40247        15450        24797 
+  124800     1040.719    40247        15450        24797 
+  124900    1041.9456    40247        15450        24797 
+  125000    1043.1713    40247        15450        24797 
+  125100    1044.3976    40247        15450        24797 
+  125200    1045.6255    40247        15450        24797 
+  125300    1046.8475    40247        15450        24797 
+  125400    1048.0645    40247        15450        24797 
+  125500    1049.2903    40247        15450        24797 
+  125600    1050.5152    40247        15450        24797 
+  125700    1051.7426    40247        15450        24797 
+  125800    1052.9682    40247        15450        24797 
+  125900    1054.1937    40247        15450        24797 
+  126000    1055.4192    40247        15450        24797 
+  126100    1056.6478    40247        15450        24797 
+  126200    1057.8738    40247        15450        24797 
+  126300    1059.0991    40247        15450        24797 
+  126400    1060.3241    40247        15450        24797 
+  126500    1061.5515    40247        15450        24797 
+  126600    1062.7772    40247        15450        24797 
+  126700    1063.9986    40247        15450        24797 
+  126800     1065.225    40247        15450        24797 
+  126900    1066.4523    40247        15450        24797 
+  127000    1067.6789    40247        15450        24797 
+  127100    1068.9033    40247        15450        24797 
+  127200    1070.1286    40247        15450        24797 
+  127300    1071.3546    40247        15450        24797 
+  127400    1072.5823    40247        15450        24797 
+  127500    1073.8076    40247        15450        24797 
+  127600    1075.0348    40247        15450        24797 
+  127700    1076.2613    40247        15450        24797 
+  127800    1077.4878    40247        15450        24797 
+  127900    1078.7127    40247        15450        24797 
+  128000    1079.9341    40247        15450        24797 
+  128100    1081.1606    40247        15450        24797 
+  128200    1082.3847    40247        15450        24797 
+  128300    1083.6106    40247        15450        24797 
+  128400    1084.8361    40247        15450        24797 
+  128500     1086.063    40247        15450        24797 
+  128600    1087.2897    40247        15450        24797 
+  128700    1088.5114    40247        15450        24797 
+  128800    1089.7364    40247        15450        24797 
+  128900    1090.9633    40247        15450        24797 
+  129000    1092.1905    40247        15450        24797 
+  129100    1093.4187    40247        15450        24797 
+  129200    1094.6441    40247        15450        24797 
+  129300    1095.8699    40247        15450        24797 
+  129400    1097.0967    40247        15450        24797 
+  129500    1098.3197    40247        15450        24797 
+  129600    1099.5438    40247        15450        24797 
+  129700     1100.771    40247        15450        24797 
+  129800    1101.9972    40247        15450        24797 
+  129900    1103.2207    40247        15450        24797 
+  130000    1104.4454    40247        15450        24797 
+  130100    1105.6722    40247        15450        24797 
+  130200    1106.9004    40247        15450        24797 
+  130300    1108.1258    40247        15450        24797 
+  130400    1109.3524    40247        15450        24797 
+  130500    1110.5788    40247        15450        24797 
+  130600    1111.8059    40247        15450        24797 
+  130700    1113.0308    40247        15450        24797 
+  130800    1114.2559    40247        15450        24797 
+  130900    1115.4819    40247        15450        24797 
+  131000    1116.7064    40247        15450        24797 
+  131100    1117.9311    40247        15450        24797 
+  131200    1119.1511    40247        15450        24797 
+  131300     1120.369    40247        15450        24797 
+  131400     1121.598    40247        15450        24797 
+  131500    1122.8237    40247        15450        24797 
+  131600    1124.0507    40247        15450        24797 
+  131700     1125.276    40247        15450        24797 
+  131800    1126.5047    40247        15450        24797 
+  131900     1127.732    40247        15450        24797 
+  132000    1128.9549    40247        15450        24797 
+  132100    1130.1803    40247        15450        24797 
+  132200    1131.4072    40247        15450        24797 
+  132300    1132.6342    40247        15450        24797 
+  132400    1133.8593    40247        15450        24797 
+  132500    1135.0847    40247        15450        24797 
+  132600    1136.3121    40247        15450        24797 
+  132700    1137.5392    40247        15450        24797 
+  132800    1138.7648    40247        15450        24797 
+  132900    1139.9915    40247        15450        24797 
+  133000    1141.2181    40247        15450        24797 
+  133100    1142.4448    40247        15450        24797 
+  133200    1143.6706    40247        15450        24797 
+  133300    1144.8957    40247        15450        24797 
+  133400    1146.1208    40247        15450        24797 
+  133500    1147.3485    40247        15450        24797 
+  133600    1148.5743    40247        15450        24797 
+  133700    1149.7988    40247        15450        24797 
+  133800    1151.0259    40247        15450        24797 
+  133900    1152.2486    40247        15450        24797 
+  134000    1153.4706    40247        15450        24797 
+  134100    1154.6964    40247        15450        24797 
+  134200    1155.9243    40247        15450        24797 
+  134300    1157.1526    40247        15450        24797 
+  134400    1158.3781    40247        15450        24797 
+  134500     1159.603    40247        15450        24797 
+  134600    1160.8298    40247        15450        24797 
+  134700    1162.0559    40247        15450        24797 
+  134800    1163.2819    40247        15450        24797 
+  134900    1164.5075    40247        15450        24797 
+  135000    1165.7357    40247        15450        24797 
+  135100    1166.9627    40247        15450        24797 
+  135200    1168.1876    40247        15450        24797 
+  135300    1169.4125    40247        15450        24797 
+  135400    1170.6385    40247        15450        24797 
+  135500     1171.867    40247        15450        24797 
+  135600    1173.0939    40247        15450        24797 
+  135700    1174.3201    40247        15450        24797 
+  135800     1175.546    40247        15450        24797 
+  135900    1176.7728    40247        15450        24797 
+  136000    1177.9991    40247        15450        24797 
+  136100    1179.2246    40247        15450        24797 
+  136200    1180.4479    40247        15450        24797 
+  136300    1181.6749    40247        15450        24797 
+  136400    1182.9023    40247        15450        24797 
+  136500     1184.127    40247        15450        24797 
+  136600    1185.3534    40247        15450        24797 
+  136700    1186.5787    40247        15450        24797 
+  136800    1187.8029    40247        15450        24797 
+  136900    1189.0248    40247        15450        24797 
+  137000    1190.2533    40247        15450        24797 
+  137100    1191.4804    40247        15450        24797 
+  137200    1192.7092    40247        15450        24797 
+  137300    1193.9353    40247        15450        24797 
+  137400    1195.1615    40247        15450        24797 
+  137500    1196.3889    40247        15450        24797 
+  137600    1197.6151    40247        15450        24797 
+  137700    1198.8407    40247        15450        24797 
+  137800    1200.0669    40247        15450        24797 
+  137900    1201.2888    40247        15450        24797 
+  138000    1202.5139    40247        15450        24797 
+  138100    1203.7397    40247        15450        24797 
+  138200    1204.9662    40247        15450        24797 
+  138300    1206.1931    40247        15450        24797 
+  138400    1207.4217    40247        15450        24797 
+  138500    1208.6477    40247        15450        24797 
+  138600    1209.8613    40247        15450        24797 
+  138700     1211.085    40247        15450        24797 
+  138800    1212.3045    40247        15450        24797 
+  138900    1213.5334    40247        15450        24797 
+  139000    1214.7594    40247        15450        24797 
+  139100    1215.9858    40247        15450        24797 
+  139200    1217.2131    40247        15450        24797 
+  139300     1218.438    40247        15450        24797 
+  139400    1219.6634    40247        15450        24797 
+  139500    1220.8903    40247        15450        24797 
+  139600    1222.1165    40247        15450        24797 
+  139700    1223.3423    40247        15450        24797 
+  139800    1224.5679    40247        15450        24797 
+  139900    1225.7944    40247        15450        24797 
+  140000    1227.0225    40247        15450        24797 
+  140100    1228.2494    40247        15450        24797 
+  140200    1229.4747    40247        15450        24797 
+  140300    1230.6989    40247        15450        24797 
+  140400    1231.9276    40247        15450        24797 
+  140500    1233.1562    40247        15450        24797 
+  140600    1234.3834    40247        15450        24797 
+  140700    1235.6069    40247        15450        24797 
+  140800    1236.8348    40247        15450        24797 
+  140900     1238.059    40247        15450        24797 
+  141000    1239.2842    40247        15450        24797 
+  141100    1240.5102    40247        15450        24797 
+  141200     1241.727    40247        15450        24797 
+  141300    1242.9537    40247        15450        24797 
+  141400    1244.1785    40247        15450        24797 
+  141500    1245.4035    40247        15450        24797 
+  141600    1246.6304    40247        15450        24797 
+  141700    1247.8569    40247        15450        24797 
+  141800    1249.0828    40247        15450        24797 
+  141900    1250.3027    40247        15450        24797 
+  142000    1251.5268    40247        15450        24797 
+  142100    1252.7531    40247        15450        24797 
+  142200    1253.9799    40247        15450        24797 
+  142300    1255.2048    40247        15450        24797 
+  142400    1256.4229    40247        15450        24797 
+  142500    1257.6496    40247        15450        24797 
+  142600    1258.8609    40247        15450        24797 
+  142700    1260.0877    40247        15450        24797 
+  142800    1261.3138    40247        15450        24797 
+  142900    1262.5404    40247        15450        24797 
+  143000    1263.7662    40247        15450        24797 
+  143100    1264.9923    40247        15450        24797 
+  143200     1266.219    40247        15450        24797 
+  143300    1267.4452    40247        15450        24797 
+  143400    1268.6647    40247        15450        24797 
+  143500    1269.8868    40247        15450        24797 
+  143600    1271.1133    40247        15450        24797 
+  143700    1272.3398    40247        15450        24797 
+  143800    1273.5629    40247        15450        24797 
+  143900    1274.7895    40247        15450        24797 
+  144000    1276.0165    40247        15450        24797 
+  144100    1277.2432    40247        15450        24797 
+  144200    1278.4685    40247        15450        24797 
+  144300    1279.6931    40247        15450        24797 
+  144400    1280.9192    40247        15450        24797 
+  144500    1282.1439    40247        15450        24797 
+  144600    1283.3688    40247        15450        24797 
+  144700    1284.5938    40247        15450        24797 
+  144800    1285.8204    40247        15450        24797 
+  144900    1287.0474    40247        15450        24797 
+  145000    1288.2712    40247        15450        24797 
+  145100    1289.4977    40247        15450        24797 
+  145200    1290.7256    40247        15450        24797 
+  145300    1291.9521    40247        15450        24797 
+  145400    1293.1788    40247        15450        24797 
+  145500    1294.4039    40247        15450        24797 
+  145600    1295.6308    40247        15450        24797 
+  145700    1296.8563    40247        15450        24797 
+  145800    1298.0812    40247        15450        24797 
+  145900    1299.3017    40247        15450        24797 
+  146000    1300.5232    40247        15450        24797 
+  146100    1301.7512    40247        15450        24797 
+  146200    1302.9771    40247        15450        24797 
+  146300    1304.2024    40247        15450        24797 
+  146400    1305.4282    40247        15450        24797 
+  146500    1306.6589    40247        15450        24797 
+  146600    1307.8842    40247        15450        24797 
+  146700    1309.1095    40247        15450        24797 
+  146800    1310.3369    40247        15450        24797 
+  146900    1311.5639    40247        15450        24797 
+  147000    1312.7911    40247        15450        24797 
+  147100    1314.0172    40247        15450        24797 
+  147200    1315.2437    40247        15450        24797 
+  147300    1316.4721    40247        15450        24797 
+  147400    1317.7001    40247        15450        24797 
+  147500    1318.9253    40247        15450        24797 
+  147600    1320.1481    40247        15450        24797 
+  147700    1321.3755    40247        15450        24797 
+  147800    1322.6005    40247        15450        24797 
+  147900    1323.8261    40247        15450        24797 
+  148000    1325.0414    40247        15450        24797 
+  148100    1326.2701    40247        15450        24797 
+  148200    1327.4979    40247        15450        24797 
+  148300    1328.7238    40247        15450        24797 
+  148400    1329.9488    40247        15450        24797 
+  148500    1331.1768    40247        15450        24797 
+  148600    1332.4044    40247        15450        24797 
+  148700    1333.6327    40247        15450        24797 
+  148800    1334.8572    40247        15450        24797 
+  148900    1336.0825    40247        15450        24797 
+  149000    1337.3074    40247        15450        24797 
+  149100    1338.5309    40247        15450        24797 
+  149200    1339.7554    40247        15450        24797 
+  149300    1340.9824    40247        15450        24797 
+  149400    1342.2081    40247        15450        24797 
+  149500    1343.4344    40247        15450        24797 
+  149600    1344.6612    40247        15450        24797 
+  149700     1345.887    40247        15450        24797 
+  149800    1347.1142    40247        15450        24797 
+  149900      1348.34    40247        15450        24797 
+  150000    1349.5655    40247        15450        24797 
+  150100    1350.7916    40247        15450        24797 
+  150200    1352.0179    40247        15450        24797 
+  150300    1353.2437    40247        15450        24797 
+  150400    1354.4695    40247        15450        24797 
+  150500    1355.6966    40247        15450        24797 
+  150600    1356.9253    40247        15450        24797 
+  150700    1358.1489    40247        15450        24797 
+  150800    1359.3623    40247        15450        24797 
+  150900    1360.5893    40247        15450        24797 
+  151000    1361.8195    40247        15450        24797 
+  151100    1363.0458    40247        15450        24797 
+  151200    1364.2704    40247        15450        24797 
+  151300    1365.4988    40247        15450        24797 
+  151400    1366.7286    40247        15450        24797 
+  151500    1367.9541    40247        15450        24797 
+  151600    1369.1799    40247        15450        24797 
+  151700    1370.4047    40247        15450        24797 
+  151800    1371.6327    40247        15450        24797 
+  151900    1372.8571    40247        15450        24797 
+  152000    1374.0837    40247        15450        24797 
+  152100    1375.3094    40247        15450        24797 
+  152200    1376.5289    40247        15450        24797 
+  152300    1377.7549    40247        15450        24797 
+  152400      1378.98    40247        15450        24797 
+  152500    1380.2051    40247        15450        24797 
+  152600    1381.4324    40247        15450        24797 
+  152700    1382.6591    40247        15450        24797 
+  152800    1383.8838    40247        15450        24797 
+  152900    1385.1093    40247        15450        24797 
+  153000    1386.3357    40247        15450        24797 
+  153100    1387.5638    40247        15450        24797 
+  153200    1388.8092    40247        15450        24797 
+  153300     1390.047    40247        15450        24797 
+  153400    1391.2914    40247        15450        24797 
+  153500    1392.5201    40247        15450        24797 
+  153600    1393.7536    40247        15450        24797 
+  153700    1394.9843    40247        15450        24797 
+  153800    1396.2123    40247        15450        24797 
+  153900    1397.5664    40247        15450        24797 
+  154000    1398.8461    40247        15450        24797 
+  154100    1400.0836    40247        15450        24797 
+  154200    1401.3226    40247        15450        24797 
+  154300    1402.5842    40247        15450        24797 
+  154400     1403.815    40247        15450        24797 
+  154500    1405.0477    40247        15450        24797 
+  154600    1406.2848    40247        15450        24797 
+  154700    1407.5137    40247        15450        24797 
+  154800    1408.7482    40247        15450        24797 
+  154900    1409.9787    40247        15450        24797 
+  155000     1411.217    40247        15450        24797 
+  155100    1412.4495    40247        15450        24797 
+  155200     1413.722    40247        15450        24797 
+  155300     1414.979    40247        15450        24797 
+  155400    1416.2465    40247        15450        24797 
+  155500    1417.4936    40247        15450        24797 
+  155600    1418.7341    40247        15450        24797 
+  155700    1420.0125    40247        15450        24797 
+  155800    1421.2769    40247        15450        24797 
+  155900    1422.5259    40247        15450        24797 
+  156000    1423.7883    40247        15450        24797 
+  156100    1425.0489    40247        15450        24797 
+  156200    1426.3018    40247        15450        24797 
+  156300    1427.5335    40247        15450        24797 
+  156400    1428.7589    40247        15450        24797 
+  156500    1429.9851    40247        15450        24797 
+  156600    1431.2125    40247        15450        24797 
+  156700      1432.45    40247        15450        24797 
+  156800    1433.6988    40247        15450        24797 
+  156900    1434.9569    40247        15450        24797 
+  157000    1436.2151    40247        15450        24797 
+  157100    1437.4606    40247        15450        24797 
+  157200    1438.7614    40247        15450        24797 
+  157300    1440.0105    40247        15450        24797 
+  157400    1441.2412    40247        15450        24797 
+  157500    1442.4786    40247        15450        24797 
+  157600     1443.751    40247        15450        24797 
+  157700     1445.005    40247        15450        24797 
+  157800    1446.2409    40247        15450        24797 
+  157900    1447.4684    40247        15450        24797 
+  158000    1448.6962    40247        15450        24797 
+  158100    1449.9245    40247        15450        24797 
+  158200    1451.1569    40247        15450        24797 
+  158300     1452.424    40247        15450        24797 
+  158400     1453.667    40247        15450        24797 
+  158500    1454.8973    40247        15450        24797 
+  158600    1456.1308    40247        15450        24797 
+  158700    1457.3724    40247        15450        24797 
+  158800    1458.5972    40247        15450        24797 
+  158900    1459.8357    40247        15450        24797 
+  159000    1461.1178    40247        15450        24797 
+  159100    1462.3593    40247        15450        24797 
+  159200    1463.6116    40247        15450        24797 
+  159300    1464.8795    40247        15450        24797 
+  159400    1466.1366    40247        15450        24797 
+  159500    1467.3836    40247        15450        24797 
+  159600    1468.6169    40247        15450        24797 
+  159700    1469.8484    40247        15450        24797 
+  159800    1471.0852    40247        15450        24797 
+  159900    1472.3206    40247        15450        24797 
+  160000    1473.5521    40247        15450        24797 
+  160100    1474.7778    40247        15450        24797 
+  160200     1476.013    40247        15450        24797 
+  160300    1477.2536    40247        15450        24797 
+  160400    1478.4893    40247        15450        24797 
+  160500    1479.7149    40247        15450        24797 
+  160600    1480.9436    40247        15450        24797 
+  160700    1482.1785    40247        15450        24797 
+  160800    1483.4285    40247        15450        24797 
+  160900    1484.6615    40247        15450        24797 
+  161000     1485.889    40247        15450        24797 
+  161100     1487.118    40247        15450        24797 
+  161200    1488.3455    40247        15450        24797 
+  161300    1489.5727    40247        15450        24797 
+  161400    1490.8053    40247        15450        24797 
+  161500    1492.0324    40247        15450        24797 
+  161600    1493.2684    40247        15450        24797 
+  161700    1494.4962    40247        15450        24797 
+  161800    1495.7233    40247        15450        24797 
+  161900    1496.9497    40247        15450        24797 
+  162000    1498.1762    40247        15450        24797 
+  162100    1499.4088    40247        15450        24797 
+  162200    1500.6387    40247        15450        24797 
+  162300    1501.8777    40247        15450        24797 
+  162400    1503.1232    40247        15450        24797 
+  162500    1504.3517    40247        15450        24797 
+  162600    1505.5744    40247        15450        24797 
+  162700    1506.8018    40247        15450        24797 
+  162800    1508.0318    40247        15450        24797 
+  162900    1509.2554    40247        15450        24797 
+  163000    1510.4794    40247        15450        24797 
+  163100    1511.7059    40247        15450        24797 
+  163200    1512.9353    40247        15450        24797 
+  163300    1514.1624    40247        15450        24797 
+  163400    1515.3865    40247        15450        24797 
+  163500    1516.6289    40247        15450        24797 
+  163600     1517.859    40247        15450        24797 
+  163700    1519.0892    40247        15450        24797 
+  163800    1520.3236    40247        15450        24797 
+  163900    1521.5587    40247        15450        24797 
+  164000    1522.7923    40247        15450        24797 
+  164100     1524.023    40247        15450        24797 
+  164200    1525.2558    40247        15450        24797 
+  164300    1526.4846    40247        15450        24797 
+  164400    1527.7169    40247        15450        24797 
+  164500    1528.9469    40247        15450        24797 
+  164600    1530.1861    40247        15450        24797 
+  164700    1531.4253    40247        15450        24797 
+  164800    1532.6666    40247        15450        24797 
+  164900    1533.9159    40247        15450        24797 
+  165000    1535.1562    40247        15450        24797 
+  165100    1536.3952    40247        15450        24797 
+  165200    1537.6255    40247        15450        24797 
+  165300    1538.8534    40247        15450        24797 
+  165400       1540.1    40247        15450        24797 
+  165500    1541.3594    40247        15450        24797 
+  165600    1542.6382    40247        15450        24797 
+  165700    1543.9306    40247        15450        24797 
+  165800    1545.1793    40247        15450        24797 
+  165900    1546.4163    40247        15450        24797 
+  166000    1547.6461    40247        15450        24797 
+  166100    1548.8728    40247        15450        24797 
+  166200    1550.0994    40247        15450        24797 
+  166300    1551.3244    40247        15450        24797 
+  166400    1552.5531    40247        15450        24797 
+  166500    1553.7777    40247        15450        24797 
+  166600    1555.0048    40247        15450        24797 
+  166700    1556.2746    40247        15450        24797 
+  166800    1557.6657    40247        15450        24797 
+  166900    1558.8971    40247        15450        24797 
+  167000    1560.1414    40247        15450        24797 
+  167100    1561.3705    40247        15450        24797 
+  167200     1562.598    40247        15450        24797 
+  167300    1563.8258    40247        15450        24797 
+  167400    1565.0563    40247        15450        24797 
+  167500    1566.2879    40247        15450        24797 
+  167600    1567.5242    40247        15450        24797 
+  167700     1568.749    40247        15450        24797 
+  167800    1569.9864    40247        15450        24797 
+  167900    1571.2234    40247        15450        24797 
+  168000    1572.4605    40247        15450        24797 
+  168100    1573.6929    40247        15450        24797 
+  168200    1574.9247    40247        15450        24797 
+  168300    1576.1683    40247        15450        24797 
+  168400    1577.4062    40247        15450        24797 
+  168500    1578.6343    40247        15450        24797 
+  168600    1579.8776    40247        15450        24797 
+  168700    1581.1185    40247        15450        24797 
+  168800    1582.3536    40247        15450        24797 
+  168900    1583.5804    40247        15450        24797 
+  169000    1584.8199    40247        15450        24797 
+  169100    1586.0605    40247        15450        24797 
+  169200    1587.2879    40247        15450        24797 
+  169300    1588.5228    40247        15450        24797 
+  169400    1589.7487    40247        15450        24797 
+  169500    1590.9779    40247        15450        24797 
+  169600    1592.2148    40247        15450        24797 
+  169700    1593.4436    40247        15450        24797 
+  169800    1594.6729    40247        15450        24797 
+  169900    1595.9045    40247        15450        24797 
+  170000    1597.1414    40247        15450        24797 
+  170100    1598.3697    40247        15450        24797 
+  170200    1599.5943    40247        15450        24797 
+  170300    1600.8221    40247        15450        24797 
+  170400    1602.0488    40247        15450        24797 
+  170500    1603.2728    40247        15450        24797 
+  170600    1604.4979    40247        15450        24797 
+  170700    1605.7236    40247        15450        24797 
+  170800    1606.9512    40247        15450        24797 
+  170900    1608.2149    40247        15450        24797 
+  171000    1609.4781    40247        15450        24797 
+  171100    1610.7054    40247        15450        24797 
+  171200     1611.941    40247        15450        24797 
+  171300     1613.171    40247        15450        24797 
+  171400     1614.401    40247        15450        24797 
+  171500    1615.6307    40247        15450        24797 
+  171600    1616.8609    40247        15450        24797 
+  171700    1618.0939    40247        15450        24797 
+  171800    1619.3194    40247        15450        24797 
+  171900    1620.5509    40247        15450        24797 
+  172000    1621.7934    40247        15450        24797 
+  172100    1623.0256    40247        15450        24797 
+  172200    1624.2619    40247        15450        24797 
+  172300    1625.4891    40247        15450        24797 
+  172400    1626.7184    40247        15450        24797 
+  172500    1627.9435    40247        15450        24797 
+  172600    1629.1852    40247        15450        24797 
+  172700    1630.4336    40247        15450        24797 
+  172800    1631.6737    40247        15450        24797 
+  172900    1632.9085    40247        15450        24797 
+  173000    1634.1381    40247        15450        24797 
+  173100    1635.3634    40247        15450        24797 
+  173200    1636.5929    40247        15450        24797 
+  173300    1637.8349    40247        15450        24797 
+  173400    1639.0935    40247        15450        24797 
+  173500    1640.3319    40247        15450        24797 
+  173600    1641.5608    40247        15450        24797 
+  173700    1642.8108    40247        15450        24797 
+  173800    1644.0395    40247        15450        24797 
+  173900    1645.2721    40247        15450        24797 
+  174000    1646.5033    40247        15450        24797 
+  174100    1647.7338    40247        15450        24797 
+  174200      1648.96    40247        15450        24797 
+  174300    1650.1879    40247        15450        24797 
+  174400    1651.4153    40247        15450        24797 
+  174500    1652.6492    40247        15450        24797 
+  174600    1653.8784    40247        15450        24797 
+  174700    1655.1062    40247        15450        24797 
+  174800    1656.3351    40247        15450        24797 
+  174900    1657.5689    40247        15450        24797 
+  175000     1658.795    40247        15450        24797 
+  175100    1660.0205    40247        15450        24797 
+  175200    1661.2482    40247        15450        24797 
+  175300    1662.4753    40247        15450        24797 
+  175400    1663.6993    40247        15450        24797 
+  175500     1664.925    40247        15450        24797 
+  175600    1666.1518    40247        15450        24797 
+  175700    1667.3781    40247        15450        24797 
+  175800     1668.606    40247        15450        24797 
+  175900    1669.8338    40247        15450        24797 
+  176000     1671.067    40247        15450        24797 
+  176100    1672.2958    40247        15450        24797 
+  176200     1673.521    40247        15450        24797 
+  176300    1674.7464    40247        15450        24797 
+  176400     1675.973    40247        15450        24797 
+  176500    1677.2016    40247        15450        24797 
+  176600    1678.4265    40247        15450        24797 
+  176700    1679.6511    40247        15450        24797 
+  176800    1680.8875    40247        15450        24797 
+  176900    1682.1131    40247        15450        24797 
+  177000    1683.3379    40247        15450        24797 
+  177100    1684.5642    40247        15450        24797 
+  177200    1685.7932    40247        15450        24797 
+  177300    1687.0175    40247        15450        24797 
+  177400    1688.2467    40247        15450        24797 
+  177500     1689.472    40247        15450        24797 
+  177600    1690.6998    40247        15450        24797 
+  177700    1691.9269    40247        15450        24797 
+  177800    1693.1616    40247        15450        24797 
+  177900    1694.3911    40247        15450        24797 
+  178000    1695.6209    40247        15450        24797 
+  178100    1696.8493    40247        15450        24797 
+  178200    1698.0778    40247        15450        24797 
+  178300    1699.3072    40247        15450        24797 
+  178400    1700.5407    40247        15450        24797 
+  178500    1701.7696    40247        15450        24797 
+  178600    1702.9958    40247        15450        24797 
+  178700    1704.2234    40247        15450        24797 
+  178800    1705.4523    40247        15450        24797 
+  178900    1706.6844    40247        15450        24797 
+  179000    1707.9301    40247        15450        24797 
+  179100    1709.1599    40247        15450        24797 
+  179200    1710.3925    40247        15450        24797 
+  179300    1711.6281    40247        15450        24797 
+  179400     1712.856    40247        15450        24797 
+  179500    1714.0854    40247        15450        24797 
+  179600    1715.3126    40247        15450        24797 
+  179700    1716.5376    40247        15450        24797 
+  179800    1717.7656    40247        15450        24797 
+  179900    1718.9917    40247        15450        24797 
+  180000    1720.2192    40247        15450        24797 
+  180100    1721.4496    40247        15450        24797 
+  180200    1722.6773    40247        15450        24797 
+  180300    1723.9242    40247        15450        24797 
+  180400      1725.16    40247        15450        24797 
+  180500    1726.3912    40247        15450        24797 
+  180600    1727.6213    40247        15450        24797 
+  180700    1728.8449    40247        15450        24797 
+  180800    1730.0783    40247        15450        24797 
+  180900    1731.3097    40247        15450        24797 
+  181000    1732.5407    40247        15450        24797 
+  181100    1733.7681    40247        15450        24797 
+  181200     1734.996    40247        15450        24797 
+  181300    1736.2354    40247        15450        24797 
+  181400    1737.4723    40247        15450        24797 
+  181500    1738.7129    40247        15450        24797 
+  181600    1739.9427    40247        15450        24797 
+  181700     1741.189    40247        15450        24797 
+  181800    1742.4301    40247        15450        24797 
+  181900    1743.6635    40247        15450        24797 
+  182000    1744.8899    40247        15450        24797 
+  182100    1746.1282    40247        15450        24797 
+  182200    1747.3663    40247        15450        24797 
+  182300    1748.5954    40247        15450        24797 
+  182400    1749.8366    40247        15450        24797 
+  182500    1751.0774    40247        15450        24797 
+  182600    1752.3244    40247        15450        24797 
+  182700    1753.5785    40247        15450        24797 
+  182800    1754.8196    40247        15450        24797 
+  182900    1756.0481    40247        15450        24797 
+  183000    1757.2879    40247        15450        24797 
+  183100    1758.5251    40247        15450        24797 
+  183200    1759.7521    40247        15450        24797 
+  183300    1760.9793    40247        15450        24797 
+  183400    1762.2079    40247        15450        24797 
+  183500    1763.4322    40247        15450        24797 
+  183600    1764.6648    40247        15450        24797 
+  183700    1765.8968    40247        15450        24797 
+  183800    1767.1286    40247        15450        24797 
+  183900    1768.3708    40247        15450        24797 
+  184000     1769.615    40247        15450        24797 
+  184100    1770.8656    40247        15450        24797 
+  184200    1772.0985    40247        15450        24797 
+  184300    1773.3247    40247        15450        24797 
+  184400    1774.5489    40247        15450        24797 
+  184500    1775.7768    40247        15450        24797 
+  184600    1777.0451    40247        15450        24797 
+  184700    1778.2824    40247        15450        24797 
+  184800    1779.5113    40247        15450        24797 
+  184900    1780.7438    40247        15450        24797 
+  185000     1781.975    40247        15450        24797 
+  185100    1783.2054    40247        15450        24797 
+  185200      1784.43    40247        15450        24797 
+  185300    1785.6592    40247        15450        24797 
+  185400    1786.8891    40247        15450        24797 
+  185500    1788.1301    40247        15450        24797 
+  185600    1789.3558    40247        15450        24797 
+  185700    1790.5838    40247        15450        24797 
+  185800     1791.818    40247        15450        24797 
+  185900     1793.074    40247        15450        24797 
+  186000    1794.3028    40247        15450        24797 
+  186100    1795.5268    40247        15450        24797 
+  186200    1796.7723    40247        15450        24797 
+  186300    1798.0555    40247        15450        24797 
+  186400    1799.3288    40247        15450        24797 
+  186500    1800.5886    40247        15450        24797 
+  186600    1801.8326    40247        15450        24797 
+  186700    1803.0568    40247        15450        24797 
+  186800    1804.2796    40247        15450        24797 
+  186900    1805.5053    40247        15450        24797 
+  187000    1806.7317    40247        15450        24797 
+  187100    1807.9561    40247        15450        24797 
+  187200    1809.1795    40247        15450        24797 
+  187300    1810.4016    40247        15450        24797 
+  187400    1811.6259    40247        15450        24797 
+  187500    1812.8515    40247        15450        24797 
+  187600    1814.0772    40247        15450        24797 
+  187700    1815.3075    40247        15450        24797 
+  187800      1816.54    40247        15450        24797 
+  187900    1817.7681    40247        15450        24797 
+  188000    1818.9944    40247        15450        24797 
+  188100    1820.2242    40247        15450        24797 
+  188200    1821.4604    40247        15450        24797 
+  188300    1822.6958    40247        15450        24797 
+  188400    1823.9276    40247        15450        24797 
+  188500    1825.1564    40247        15450        24797 
+  188600    1826.3876    40247        15450        24797 
+  188700    1827.6157    40247        15450        24797 
+  188800    1828.8417    40247        15450        24797 
+  188900    1830.0674    40247        15450        24797 
+  189000    1831.2938    40247        15450        24797 
+  189100    1832.5253    40247        15450        24797 
+  189200    1833.7522    40247        15450        24797 
+  189300    1834.9761    40247        15450        24797 
+  189400    1836.2016    40247        15450        24797 
+  189500     1837.435    40247        15450        24797 
+  189600    1838.6638    40247        15450        24797 
+  189700    1839.9003    40247        15450        24797 
+  189800    1841.1385    40247        15450        24797 
+  189900    1842.3752    40247        15450        24797 
+  190000    1843.6212    40247        15450        24797 
+  190100    1844.8542    40247        15450        24797 
+  190200    1846.0853    40247        15450        24797 
+  190300    1847.3208    40247        15450        24797 
+  190400    1848.5887    40247        15450        24797 
+  190500    1849.8309    40247        15450        24797 
+  190600    1851.0624    40247        15450        24797 
+  190700    1852.2905    40247        15450        24797 
+  190800    1853.5137    40247        15450        24797 
+  190900    1854.7374    40247        15450        24797 
+  191000    1855.9633    40247        15450        24797 
+  191100    1857.1959    40247        15450        24797 
+  191200    1858.4259    40247        15450        24797 
+  191300    1859.6586    40247        15450        24797 
+  191400    1860.8924    40247        15450        24797 
+  191500    1862.1256    40247        15450        24797 
+  191600    1863.3532    40247        15450        24797 
+  191700    1864.5911    40247        15450        24797 
+  191800    1865.8258    40247        15450        24797 
+  191900      1867.06    40247        15450        24797 
+  192000    1868.2967    40247        15450        24797 
+  192100    1869.5284    40247        15450        24797 
+  192200    1870.7559    40247        15450        24797 
+  192300    1871.9817    40247        15450        24797 
+  192400     1873.212    40247        15450        24797 
+  192500    1874.4402    40247        15450        24797 
+  192600    1875.6676    40247        15450        24797 
+  192700    1876.8952    40247        15450        24797 
+  192800    1878.1207    40247        15450        24797 
+  192900    1879.3457    40247        15450        24797 
+  193000    1880.5695    40247        15450        24797 
+  193100    1881.7984    40247        15450        24797 
+  193200    1883.0233    40247        15450        24797 
+  193300     1884.249    40247        15450        24797 
+  193400    1885.4719    40247        15450        24797 
+  193500    1886.6983    40247        15450        24797 
+  193600    1887.9218    40247        15450        24797 
+  193700     1889.146    40247        15450        24797 
+  193800    1890.3748    40247        15450        24797 
+  193900    1891.5996    40247        15450        24797 
+  194000    1892.8255    40247        15450        24797 
+  194100    1894.0476    40247        15450        24797 
+  194200    1895.2699    40247        15450        24797 
+  194300    1896.4938    40247        15450        24797 
+  194400    1897.7197    40247        15450        24797 
+  194500     1898.946    40247        15450        24797 
+  194600    1900.1722    40247        15450        24797 
+  194700    1901.3996    40247        15450        24797 
+  194800     1902.633    40247        15450        24797 
+  194900    1903.8659    40247        15450        24797 
+  195000    1905.0942    40247        15450        24797 
+  195100    1906.3246    40247        15450        24797 
+  195200    1907.5613    40247        15450        24797 
+  195300    1908.7884    40247        15450        24797 
+  195400    1910.0172    40247        15450        24797 
+  195500    1911.2458    40247        15450        24797 
+  195600     1912.477    40247        15450        24797 
+  195700    1913.7033    40247        15450        24797 
+  195800    1914.9379    40247        15450        24797 
+  195900    1916.1753    40247        15450        24797 
+  196000     1917.407    40247        15450        24797 
+  196100    1918.6368    40247        15450        24797 
+  196200     1919.866    40247        15450        24797 
+  196300    1921.0977    40247        15450        24797 
+  196400    1922.3291    40247        15450        24797 
+  196500    1923.5549    40247        15450        24797 
+  196600    1924.7817    40247        15450        24797 
+  196700    1926.0149    40247        15450        24797 
+  196800    1927.2458    40247        15450        24797 
+  196900    1928.4784    40247        15450        24797 
+  197000    1929.7481    40247        15450        24797 
+  197100    1930.9907    40247        15450        24797 
+  197200    1932.2246    40247        15450        24797 
+  197300    1933.4529    40247        15450        24797 
+  197400    1934.6825    40247        15450        24797 
+  197500    1935.9307    40247        15450        24797 
+  197600    1937.1696    40247        15450        24797 
+  197700    1938.4046    40247        15450        24797 
+  197800    1939.6358    40247        15450        24797 
+  197900    1940.8796    40247        15450        24797 
+  198000    1942.1346    40247        15450        24797 
+  198100    1943.3739    40247        15450        24797 
+  198200    1944.6165    40247        15450        24797 
+  198300    1945.8651    40247        15450        24797 
+  198400    1947.1044    40247        15450        24797 
+  198500    1948.3304    40247        15450        24797 
+  198600    1949.5567    40247        15450        24797 
+  198700    1950.7851    40247        15450        24797 
+  198800    1952.0151    40247        15450        24797 
+  198900    1953.2405    40247        15450        24797 
+  199000    1954.4636    40247        15450        24797 
+  199100    1955.6874    40247        15450        24797 
+  199200    1956.9168    40247        15450        24797 
+  199300    1958.1456    40247        15450        24797 
+  199400    1959.3859    40247        15450        24797 
+  199500    1960.6212    40247        15450        24797 
+  199600    1961.8511    40247        15450        24797 
+  199700    1963.0798    40247        15450        24797 
+  199800    1964.3164    40247        15450        24797 
+  199900    1965.5594    40247        15450        24797 
+  200000    1966.8083    40247        15450        24797 
+  200100    1968.0423    40247        15450        24797 
+  200200    1969.2757    40247        15450        24797 
+  200300    1970.5023    40247        15450        24797 
+  200400    1971.7338    40247        15450        24797 
+  200500    1972.9586    40247        15450        24797 
+  200600    1974.1856    40247        15450        24797 
+  200700    1975.4201    40247        15450        24797 
+  200800    1976.6489    40247        15450        24797 
+  200900    1977.8778    40247        15450        24797 
+  201000    1979.1056    40247        15450        24797 
+  201100     1980.331    40247        15450        24797 
+  201200     1981.563    40247        15450        24797 
+  201300    1982.7926    40247        15450        24797 
+  201400     1984.022    40247        15450        24797 
+  201500    1985.2522    40247        15450        24797 
+  201600    1986.4862    40247        15450        24797 
+  201700    1987.7153    40247        15450        24797 
+  201800    1988.9424    40247        15450        24797 
+  201900    1990.1686    40247        15450        24797 
+  202000    1991.3952    40247        15450        24797 
+  202100    1992.6238    40247        15450        24797 
+  202200    1993.8526    40247        15450        24797 
+  202300    1995.0784    40247        15450        24797 
+  202400    1996.3065    40247        15450        24797 
+  202500    1997.5343    40247        15450        24797 
+  202600     1998.761    40247        15450        24797 
+  202700    1999.9912    40247        15450        24797 
+  202800    2001.2175    40247        15450        24797 
+  202900    2002.4477    40247        15450        24797 
+  203000    2003.6787    40247        15450        24797 
+  203100    2004.9097    40247        15450        24797 
+  203200    2006.1396    40247        15450        24797 
+  203300    2007.3757    40247        15450        24797 
+  203400    2008.6027    40247        15450        24797 
+  203500    2009.8292    40247        15450        24797 
+  203600    2011.0546    40247        15450        24797 
+  203700    2012.2833    40247        15450        24797 
+  203800    2013.5104    40247        15450        24797 
+  203900    2014.7363    40247        15450        24797 
+  204000    2015.9658    40247        15450        24797 
+  204100    2017.1959    40247        15450        24797 
+  204200    2018.4212    40247        15450        24797 
+  204300    2019.6501    40247        15450        24797 
+  204400    2020.8875    40247        15450        24797 
+  204500    2022.1407    40247        15450        24797 
+  204600    2023.3731    40247        15450        24797 
+  204700    2024.6038    40247        15450        24797 
+  204800    2025.8352    40247        15450        24797 
+  204900    2027.0677    40247        15450        24797 
+  205000    2028.2983    40247        15450        24797 
+  205100    2029.5313    40247        15450        24797 
+  205200    2030.7595    40247        15450        24797 
+  205300    2031.9924    40247        15450        24797 
+  205400    2033.2205    40247        15450        24797 
+  205500    2034.4516    40247        15450        24797 
+  205600    2035.6788    40247        15450        24797 
+  205700    2036.9148    40247        15450        24797 
+  205800    2038.1467    40247        15450        24797 
+  205900    2039.3735    40247        15450        24797 
+  206000    2040.6089    40247        15450        24797 
+  206100    2041.8469    40247        15450        24797 
+  206200    2043.0929    40247        15450        24797 
+  206300    2044.3288    40247        15450        24797 
+  206400    2045.5672    40247        15450        24797 
+  206500     2046.803    40247        15450        24797 
+  206600    2048.0538    40247        15450        24797 
+  206700    2049.2962    40247        15450        24797 
+  206800    2050.5381    40247        15450        24797 
+  206900      2051.78    40247        15450        24797 
+  207000    2053.0192    40247        15450        24797 
+  207100    2054.2629    40247        15450        24797 
+  207200    2055.4981    40247        15450        24797 
+  207300    2056.7292    40247        15450        24797 
+  207400    2057.9558    40247        15450        24797 
+  207500    2059.1952    40247        15450        24797 
+  207600    2060.4653    40247        15450        24797 
+  207700    2061.7059    40247        15450        24797 
+  207800     2062.949    40247        15450        24797 
+  207900     2064.177    40247        15450        24797 
+  208000    2065.4072    40247        15450        24797 
+  208100    2066.6332    40247        15450        24797 
+  208200    2067.8665    40247        15450        24797 
+  208300    2069.1027    40247        15450        24797 
+  208400    2070.3358    40247        15450        24797 
+  208500    2071.5718    40247        15450        24797 
+  208600    2072.7968    40247        15450        24797 
+  208700    2074.0267    40247        15450        24797 
+  208800    2075.2691    40247        15450        24797 
+  208900    2076.4994    40247        15450        24797 
+  209000    2077.7311    40247        15450        24797 
+  209100    2078.9731    40247        15450        24797 
+  209200    2080.2079    40247        15450        24797 
+  209300    2081.4417    40247        15450        24797 
+  209400    2082.6734    40247        15450        24797 
+  209500    2083.9001    40247        15450        24797 
+  209600    2085.1329    40247        15450        24797 
+  209700     2086.396    40247        15450        24797 
+  209800    2087.6825    40247        15450        24797 
+  209900     2088.971    40247        15450        24797 
+  210000    2090.2212    40247        15450        24797 
+  210100    2091.4658    40247        15450        24797 
+  210200    2092.6989    40247        15450        24797 
+  210300    2093.9308    40247        15450        24797 
+  210400     2095.164    40247        15450        24797 
+  210500    2096.4104    40247        15450        24797 
+  210600    2097.6476    40247        15450        24797 
+  210700    2098.8813    40247        15450        24797 
+  210800    2100.1277    40247        15450        24797 
+  210900    2101.3707    40247        15450        24797 
+  211000    2102.6175    40247        15450        24797 
+  211100    2103.8469    40247        15450        24797 
+  211200    2105.0767    40247        15450        24797 
+  211300    2106.3145    40247        15450        24797 
+  211400    2107.5475    40247        15450        24797 
+  211500    2108.7771    40247        15450        24797 
+  211600     2110.009    40247        15450        24797 
+  211700      2111.24    40247        15450        24797 
+  211800     2112.479    40247        15450        24797 
+  211900    2113.7131    40247        15450        24797 
+  212000    2114.9433    40247        15450        24797 
+  212100    2116.1756    40247        15450        24797 
+  212200    2117.4032    40247        15450        24797 
+  212300    2118.6311    40247        15450        24797 
+  212400    2119.8625    40247        15450        24797 
+  212500    2121.0869    40247        15450        24797 
+  212600     2122.311    40247        15450        24797 
+  212700    2123.5387    40247        15450        24797 
+  212800    2124.7636    40247        15450        24797 
+  212900    2125.9891    40247        15450        24797 
+  213000     2127.222    40247        15450        24797 
+  213100     2128.452    40247        15450        24797 
+  213200    2129.6824    40247        15450        24797 
+  213300    2130.9246    40247        15450        24797 
+  213400    2132.1846    40247        15450        24797 
+  213500    2133.4573    40247        15450        24797 
+  213600    2134.7741    40247        15450        24797 
+  213700    2136.0929    40247        15450        24797 
+  213800    2137.3577    40247        15450        24797 
+  213900    2138.6417    40247        15450        24797 
+  214000    2139.8843    40247        15450        24797 
+  214100    2141.1667    40247        15450        24797 
+  214200    2142.4515    40247        15450        24797 
+  214300    2143.7137    40247        15450        24797 
+  214400    2144.9789    40247        15450        24797 
+  214500    2146.2556    40247        15450        24797 
+  214600     2147.523    40247        15450        24797 
+  214700    2148.7573    40247        15450        24797 
+  214800    2149.9816    40247        15450        24797 
+  214900    2151.2114    40247        15450        24797 
+  215000    2152.4493    40247        15450        24797 
+  215100    2153.7016    40247        15450        24797 
+  215200    2154.9582    40247        15450        24797 
+  215300    2156.2862    40247        15450        24797 
+  215400    2157.5945    40247        15450        24797 
+  215500      2158.89    40247        15450        24797 
+  215600    2160.1886    40247        15450        24797 
+  215700    2161.4221    40247        15450        24797 
+  215800    2162.6566    40247        15450        24797 
+  215900    2163.9103    40247        15450        24797 
+  216000    2165.1649    40247        15450        24797 
+  216100    2166.3927    40247        15450        24797 
+  216200    2167.6352    40247        15450        24797 
+  216300    2168.9135    40247        15450        24797 
+  216400    2170.2015    40247        15450        24797 
+  216500    2171.5248    40247        15450        24797 
+  216600    2172.8011    40247        15450        24797 
+  216700    2174.0676    40247        15450        24797 
+  216800    2175.3498    40247        15450        24797 
+  216900    2176.6002    40247        15450        24797 
+  217000    2177.8347    40247        15450        24797 
+  217100    2179.0622    40247        15450        24797 
+  217200     2180.288    40247        15450        24797 
+  217300    2181.5116    40247        15450        24797 
+  217400    2182.7341    40247        15450        24797 
+  217500    2183.9918    40247        15450        24797 
+  217600     2185.232    40247        15450        24797 
+  217700    2186.4695    40247        15450        24797 
+  217800    2187.7053    40247        15450        24797 
+  217900    2188.9446    40247        15450        24797 
+  218000    2190.1921    40247        15450        24797 
+  218100    2191.4291    40247        15450        24797 
+  218200    2192.6626    40247        15450        24797 
+  218300     2193.896    40247        15450        24797 
+  218400    2195.1185    40247        15450        24797 
+  218500    2196.3397    40247        15450        24797 
+  218600    2197.5613    40247        15450        24797 
+  218700    2198.7842    40247        15450        24797 
+  218800    2200.0077    40247        15450        24797 
+  218900    2201.2297    40247        15450        24797 
+  219000    2202.4522    40247        15450        24797 
+  219100    2203.6749    40247        15450        24797 
+  219200    2204.8963    40247        15450        24797 
+  219300    2206.1188    40247        15450        24797 
+  219400    2207.3416    40247        15450        24797 
+  219500    2208.5807    40247        15450        24797 
+  219600    2209.8212    40247        15450        24797 
+  219700    2211.0655    40247        15450        24797 
+  219800    2212.3067    40247        15450        24797 
+  219900     2213.546    40247        15450        24797 
+  220000    2214.7767    40247        15450        24797 
+  220100    2216.0306    40247        15450        24797 
+  220200    2217.2868    40247        15450        24797 
+  220300    2218.5275    40247        15450        24797 
+  220400     2219.751    40247        15450        24797 
+  220500    2220.9752    40247        15450        24797 
+  220600    2222.2069    40247        15450        24797 
+  220700    2223.4315    40247        15450        24797 
+  220800    2224.6573    40247        15450        24797 
+  220900     2225.892    40247        15450        24797 
+  221000    2227.1487    40247        15450        24797 
+  221100    2228.3896    40247        15450        24797 
+  221200    2229.6149    40247        15450        24797 
+  221300    2230.8494    40247        15450        24797 
+  221400    2232.0737    40247        15450        24797 
+  221500    2233.2999    40247        15450        24797 
+  221600    2234.5262    40247        15450        24797 
+  221700    2235.7486    40247        15450        24797 
+  221800    2236.9736    40247        15450        24797 
+  221900     2238.195    40247        15450        24797 
+  222000    2239.4174    40247        15450        24797 
+  222100    2240.6431    40247        15450        24797 
+  222200    2241.8662    40247        15450        24797 
+  222300     2243.089    40247        15450        24797 
+  222400    2244.3104    40247        15450        24797 
+  222500    2245.5325    40247        15450        24797 
+  222600    2246.7616    40247        15450        24797 
+  222700    2247.9855    40247        15450        24797 
+  222800     2249.209    40247        15450        24797 
+  222900    2250.4414    40247        15450        24797 
+  223000     2251.714    40247        15450        24797 
+  223100    2252.9739    40247        15450        24797 
+  223200    2254.2255    40247        15450        24797 
+  223300    2255.4762    40247        15450        24797 
+  223400    2256.7271    40247        15450        24797 
+  223500    2257.9645    40247        15450        24797 
+  223600    2259.1991    40247        15450        24797 
+  223700    2260.4317    40247        15450        24797 
+  223800    2261.6674    40247        15450        24797 
+  223900    2262.9007    40247        15450        24797 
+  224000    2264.1319    40247        15450        24797 
+  224100    2265.3618    40247        15450        24797 
+  224200    2266.5956    40247        15450        24797 
+  224300    2267.8353    40247        15450        24797 
+  224400    2269.0754    40247        15450        24797 
+  224500    2270.3047    40247        15450        24797 
+  224600    2271.5417    40247        15450        24797 
+  224700    2272.7824    40247        15450        24797 
+  224800    2274.0279    40247        15450        24797 
+  224900    2275.2682    40247        15450        24797 
+  225000    2276.5082    40247        15450        24797 
+  225100    2277.7427    40247        15450        24797 
+  225200    2278.9688    40247        15450        24797 
+  225300    2280.1999    40247        15450        24797 
+  225400    2281.4254    40247        15450        24797 
+  225500    2282.6534    40247        15450        24797 
+  225600    2283.8797    40247        15450        24797 
+  225700    2285.1547    40247        15450        24797 
+  225800    2286.4411    40247        15450        24797 
+  225900    2287.7184    40247        15450        24797 
+  226000    2288.9759    40247        15450        24797 
+  226100    2290.2287    40247        15450        24797 
+  226200    2291.4799    40247        15450        24797 
+  226300     2292.735    40247        15450        24797 
+  226400    2293.9772    40247        15450        24797 
+  226500    2295.2512    40247        15450        24797 
+  226600    2296.5162    40247        15450        24797 
+  226700    2297.7681    40247        15450        24797 
+  226800    2299.0023    40247        15450        24797 
+  226900    2300.2283    40247        15450        24797 
+  227000    2301.4539    40247        15450        24797 
+  227100    2302.6779    40247        15450        24797 
+  227200    2303.9012    40247        15450        24797 
+  227300    2305.1244    40247        15450        24797 
+  227400    2306.3716    40247        15450        24797 
+  227500    2307.6006    40247        15450        24797 
+  227600    2308.8221    40247        15450        24797 
+  227700    2310.0447    40247        15450        24797 
+  227800    2311.2684    40247        15450        24797 
+  227900    2312.4918    40247        15450        24797 
+  228000    2313.7132    40247        15450        24797 
+  228100    2314.9384    40247        15450        24797 
+  228200    2316.1665    40247        15450        24797 
+  228300    2317.3952    40247        15450        24797 
+  228400     2318.619    40247        15450        24797 
+  228500     2319.846    40247        15450        24797 
+  228600    2321.0686    40247        15450        24797 
+  228700    2322.2912    40247        15450        24797 
+  228800    2323.5136    40247        15450        24797 
+  228900    2324.7388    40247        15450        24797 
+  229000    2325.9674    40247        15450        24797 
+  229100    2327.1928    40247        15450        24797 
+  229200    2328.4177    40247        15450        24797 
+  229300    2329.6402    40247        15450        24797 
+  229400     2330.866    40247        15450        24797 
+  229500     2332.096    40247        15450        24797 
+  229600    2333.3192    40247        15450        24797 
+  229700    2334.5427    40247        15450        24797 
+  229800    2335.7648    40247        15450        24797 
+  229900    2336.9904    40247        15450        24797 
+  230000    2338.2122    40247        15450        24797 
+  230100    2339.4359    40247        15450        24797 
+  230200    2340.6605    40247        15450        24797 
+  230300    2341.8868    40247        15450        24797 
+  230400    2343.1177    40247        15450        24797 
+  230500    2344.3424    40247        15450        24797 
+  230600    2345.5677    40247        15450        24797 
+  230700    2346.7986    40247        15450        24797 
+  230800    2348.0232    40247        15450        24797 
+  230900    2349.2522    40247        15450        24797 
+  231000     2350.484    40247        15450        24797 
+  231100    2351.7116    40247        15450        24797 
+  231200     2352.938    40247        15450        24797 
+  231300    2354.1663    40247        15450        24797 
+  231400    2355.3939    40247        15450        24797 
+  231500    2356.6196    40247        15450        24797 
+  231600    2357.8474    40247        15450        24797 
+  231700    2359.0736    40247        15450        24797 
+  231800    2360.2982    40247        15450        24797 
+  231900    2361.5243    40247        15450        24797 
+  232000    2362.7512    40247        15450        24797 
+  232100    2363.9745    40247        15450        24797 
+  232200    2365.1996    40247        15450        24797 
+  232300    2366.4259    40247        15450        24797 
+  232400    2367.6507    40247        15450        24797 
+  232500    2368.8741    40247        15450        24797 
+  232600    2370.0929    40247        15450        24797 
+  232700    2371.3192    40247        15450        24797 
+  232800    2372.5462    40247        15450        24797 
+  232900      2373.77    40247        15450        24797 
+  233000    2374.9935    40247        15450        24797 
+  233100     2376.218    40247        15450        24797 
+  233200    2377.4428    40247        15450        24797 
+  233300    2378.6665    40247        15450        24797 
+  233400    2379.8903    40247        15450        24797 
+  233500    2381.1157    40247        15450        24797 
+  233600    2382.3407    40247        15450        24797 
+  233700    2383.5631    40247        15450        24797 
+  233800    2384.7843    40247        15450        24797 
+  233900    2386.0081    40247        15450        24797 
+  234000    2387.2331    40247        15450        24797 
+  234100     2388.458    40247        15450        24797 
+  234200    2389.6822    40247        15450        24797 
+  234300     2390.909    40247        15450        24797 
+  234400    2392.1319    40247        15450        24797 
+  234500    2393.3536    40247        15450        24797 
+  234600    2394.5754    40247        15450        24797 
+  234700    2395.7976    40247        15450        24797 
+  234800    2397.0208    40247        15450        24797 
+  234900    2398.2435    40247        15450        24797 
+  235000    2399.4648    40247        15450        24797 
+  235100    2400.6886    40247        15450        24797 
+  235200    2401.9116    40247        15450        24797 
+  235300    2403.1325    40247        15450        24797 
+  235400    2404.3541    40247        15450        24797 
+  235500    2405.5757    40247        15450        24797 
+  235600    2406.7995    40247        15450        24797 
+  235700    2408.0213    40247        15450        24797 
+  235800    2409.2429    40247        15450        24797 
+  235900    2410.4634    40247        15450        24797 
+  236000    2411.6874    40247        15450        24797 
+  236100    2412.9097    40247        15450        24797 
+  236200    2414.1347    40247        15450        24797 
+  236300    2415.3503    40247        15450        24797 
+  236400    2416.5771    40247        15450        24797 
+  236500    2417.8025    40247        15450        24797 
+  236600    2419.0266    40247        15450        24797 
+  236700    2420.2511    40247        15450        24797 
+  236800    2421.4749    40247        15450        24797 
+  236900    2422.7015    40247        15450        24797 
+  237000    2423.9249    40247        15450        24797 
+  237100    2425.1492    40247        15450        24797 
+  237200    2426.3728    40247        15450        24797 
+  237300    2427.5975    40247        15450        24797 
+  237400    2428.8209    40247        15450        24797 
+  237500     2430.044    40247        15450        24797 
+  237600    2431.2684    40247        15450        24797 
+  237700    2432.4945    40247        15450        24797 
+  237800    2433.7185    40247        15450        24797 
+  237900    2434.9431    40247        15450        24797 
+  238000    2436.1663    40247        15450        24797 
+  238100    2437.3898    40247        15450        24797 
+  238200     2438.612    40247        15450        24797 
+  238300    2439.8358    40247        15450        24797 
+  238400    2441.0603    40247        15450        24797 
+  238500    2442.2854    40247        15450        24797 
+  238600    2443.5107    40247        15450        24797 
+  238700    2444.7349    40247        15450        24797 
+  238800    2445.9602    40247        15450        24797 
+  238900    2447.1845    40247        15450        24797 
+  239000    2448.4094    40247        15450        24797 
+  239100     2449.634    40247        15450        24797 
+  239200     2450.863    40247        15450        24797 
+  239300    2452.0876    40247        15450        24797 
+  239400    2453.3127    40247        15450        24797 
+  239500     2454.542    40247        15450        24797 
+  239600     2455.781    40247        15450        24797 
+  239700    2457.0568    40247        15450        24797 
+  239800     2458.281    40247        15450        24797 
+  239900    2459.5081    40247        15450        24797 
+  240000    2460.7595    40247        15450        24797 
+Loop time of 2460.76 on 10 procs for 200000 steps with 40247 atoms
+
+Performance: 17555555.169 tau/day, 81.276 timesteps/s
+99.8% CPU use with 10 MPI tasks x no OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.011084   | 274.94     | 1273.1     |2668.9 | 11.17
+Neigh   | 0.0019248  | 0.36484    | 1.6931     |  96.9 |  0.01
+Comm    | 0.026467   | 18.972     | 56.733     | 563.9 |  0.77
+Output  | 0.12498    | 19.146     | 24.44      | 193.2 |  0.78
+Modify  | 0.25116    | 237.29     | 1107.2     |2484.6 |  9.64
+Other   |            | 1910       |            |       | 77.62
+
+Nlocal:    4024.7 ave 18922 max 0 min
+Histogram: 7 0 0 0 0 1 1 0 0 1
+Nghost:    659.9 ave 3223 max 0 min
+Histogram: 7 0 0 0 1 1 0 0 0 1
+Neighs:    35793.3 ave 166190 max 0 min
+Histogram: 7 0 0 0 0 1 1 0 0 1
+
+Total # of neighbors = 357933
+Ave neighs/atom = 8.89341
+Neighbor list builds = 30
+Dangerous builds = 0
+
+
+
+
+
+
+
+
+
+
+
+Total wall time: 0:44:07

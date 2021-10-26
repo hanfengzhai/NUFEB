@@ -49,7 +49,7 @@ echo "Installing required packages.."
 cd $rootDir/lammps/src || exit 1
 make yes-user-nufeb
 make yes-granular
-
+make yes-all
 for var in "$@"
 do 
     if [ $var == "--enable-vtk" ]; then

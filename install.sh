@@ -50,6 +50,8 @@ cd $rootDir/lammps/src || exit 1
 make yes-user-nufeb
 make yes-granular
 make yes-all
+make yes-python
+
 for var in "$@"
 do 
     if [ $var == "--enable-vtk" ]; then

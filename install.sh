@@ -49,7 +49,7 @@ echo "Installing required packages.."
 cd $rootDir/lammps/src || exit 1
 make yes-user-nufeb
 make yes-granular
-make yes-all
+make yes-manybody
 make yes-python
 
 for var in "$@"
@@ -102,5 +102,8 @@ done
 
 make -j4 mpi
 write_path
+
+make install-python
+
 exit 1
 

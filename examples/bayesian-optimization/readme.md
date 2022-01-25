@@ -4,4 +4,4 @@
 * *main.py*: Bayesian optimization code for nanomaterials topology optimization;
 * *test.py*: to check whether the LAMMPS - Python interface is correctly installed.
 
-Copyright (c) 2022, Hanfeng Zhai, Cornell University
+Copyright &copy; 2022, Hanfeng Zhai, Cornell University

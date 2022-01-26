@@ -27,9 +27,9 @@ thirdparty              thirdparty tools
 </pre>
 
 ### Getting source
-Get NUFEB source code and submodules for its thirdparty libraries:
+Get NUFEB source code and submodules for its thirdparty libraries (Hanfeng editted version):
 <pre>
-git clone https://github.com/nufeb/NUFEB --recursive
+git clone https://github.com/hanfengzhai/NUFEB --recursive
 </pre>
 
 ### Building

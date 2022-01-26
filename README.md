@@ -37,7 +37,7 @@ NUFEB requires gcc/g++ and openmpi for a successful build.
 
 Build NUFEB:
 <pre>
-./install.sh
+./install.sh --shared
 </pre>
 
 ### Running
